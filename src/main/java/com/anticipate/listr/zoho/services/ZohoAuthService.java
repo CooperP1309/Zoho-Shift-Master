@@ -52,6 +52,7 @@ public class ZohoAuthService
         log.info("Initialising, requesting access token from {}", tokenHost);
 
         getZohoAccessToken();
+        this.zohoAuthEntity.setOrgId(cliqOrgId);
 
         log.info("Resulting access token: {}", printZohoAccessToken());
     }
@@ -82,7 +83,6 @@ public class ZohoAuthService
 
         log.info("[ZohoAuthService] Access token obtained, expires in {}s", tokenResponse.getExpiresIn());
 
-        // NOTE: access token set seperately to not overwrite the zsoid written during constructor
         this.zohoAuthEntity.setAccessToken(tokenResponse.getAccessToken());
         this.zohoAuthEntity.setExpiryTime(tokenResponse.getExpiresIn());
     }
