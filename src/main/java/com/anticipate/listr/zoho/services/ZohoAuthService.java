@@ -5,6 +5,8 @@ import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 /* local modules */
 import com.anticipate.listr.zoho_client.entities.ZohoAuthEntity;
@@ -19,7 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class ZohoAuthService {
+public class ZohoAuthService 
+{
 
     private final RestClient restClient;
 
@@ -33,7 +36,8 @@ public class ZohoAuthService {
             @Value("${zoho.client.id}") String clientId,
             @Value("${zoho.client.secret}") String clientSecret,
             @Value("${zoho.client.cliqOrgId}") String cliqOrgId,
-            @Value("${zoho.client.host}") String tokenHost) {
+            @Value("${zoho.client.host}") String tokenHost) 
+    {
         
         this.restClient = RestClient.create();
 
@@ -45,8 +49,11 @@ public class ZohoAuthService {
         this.tokenHost = tokenHost;
         this.zohoAuthEntity = new ZohoAuthEntity();
 
-        log.info("[ZohoAuthService] Initialising, requesting access token from {}", tokenHost);
+        log.info("Initialising, requesting access token from {}", tokenHost);
+
         getZohoAccessToken();
+
+        log.info("Resulting access token: {}", printZohoAccessToken());
     }
 
     /*
@@ -56,7 +63,8 @@ public class ZohoAuthService {
     *   from Zoho Desk. The token returned from this
     *   endpoint is only scoped to the Zoho Desk API.
     */
-    public String getZohoAccessToken() {
+    public void getZohoAccessToken() 
+    {
 
         ZohoAuthEntity tokenResponse =  
                 
@@ -67,10 +75,9 @@ public class ZohoAuthService {
                 .retrieve()
                 .body(ZohoAuthEntity.class);
 
-        if (tokenResponse == null || tokenResponse.getAccessToken() == null) {
-            log.error("[ZohoAuthService] Failed to obtain access token: {}",
-                    tokenResponse == null ? "empty response" : tokenResponse.getError());
-            return "FAILED TO OBTAIN ZOHO ACCESS TOKEN";
+        if (tokenResponse == null || tokenResponse.getAccessToken() == null)
+        {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No token response from Zoho");
         }
 
         log.info("[ZohoAuthService] Access token obtained, expires in {}s", tokenResponse.getExpiresIn());
@@ -78,10 +85,6 @@ public class ZohoAuthService {
         // NOTE: access token set seperately to not overwrite the zsoid written during constructor
         this.zohoAuthEntity.setAccessToken(tokenResponse.getAccessToken());
         this.zohoAuthEntity.setExpiryTime(tokenResponse.getExpiresIn());
-
-        return "RESULTING HEADERS FROM ZOHO AUTH CLASS:\n" +
-                this.zohoAuthEntity.getAuthHeaderName() + ": " + this.zohoAuthEntity.getAuthHeaderValue() + "\n" +
-                this.zohoAuthEntity.getOrgIdHeaderName() + ": " + this.zohoAuthEntity.getOrgIdHeaderValue();
     }
 
     /*

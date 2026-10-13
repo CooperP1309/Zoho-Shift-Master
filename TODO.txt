@@ -1,1 +1,3 @@
 [ ] IN README, ADD SCREENSHOT INSTRUCTIONS OF HOW TO GET THINGS SUCH AS ORG ID (recall cliq > settings > URL contains it)
+
+[ ] TODO: Remove registration workflow - Only need admin account to be able to set schedule
