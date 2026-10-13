@@ -16,6 +16,10 @@ public class ZohoAuthEntity {
     @JsonProperty("expires_in")
     private int expiresIn;
 
+    // set by Zoho (with HTTP 200) instead of access_token when the request is rejected
+    @JsonProperty("error")
+    private String error;
+
     // epoch millis at which the access token expires; not part of the Zoho response
     private long expiryTime;
 
@@ -42,6 +46,10 @@ public class ZohoAuthEntity {
 
     public int getExpiresIn() {
         return expiresIn;
+    }
+
+    public String getError() {
+        return error;
     }
 
     // http header name/value pairs

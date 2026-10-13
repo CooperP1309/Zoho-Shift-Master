@@ -32,19 +32,20 @@ public class ZohoAuthService {
     public ZohoAuthService(
             @Value("${zoho.client.id}") String clientId,
             @Value("${zoho.client.secret}") String clientSecret,
-            @Value("${zoho.client.orgId}") String orgId,
+            @Value("${zoho.client.cliqOrgId}") String cliqOrgId,
             @Value("${zoho.client.host}") String tokenHost) {
         
         this.restClient = RestClient.create();
 
         this.preTokenBody = "grant_type=client_credentials&client_id=" + clientId +
-                            "&client_secret=" + clientSecret + 
-                            "&scope=Desk.tickets.READ,Desk.search.READ&soid=Desk." + orgId;
+                            "&client_secret=" + clientSecret +
+                            "&scope=ZohoCliq.Messages.READ,ZohoCliq.Webhooks.CREATE" +
+                            "&soid=ZohoCliq." + cliqOrgId;
 
         this.tokenHost = tokenHost;
         this.zohoAuthEntity = new ZohoAuthEntity();
-        this.zohoAuthEntity.setOrgId(orgId);
 
+        log.info("[ZohoAuthService] Initialising, requesting access token from {}", tokenHost);
         getZohoAccessToken();
     }
 
@@ -65,6 +66,14 @@ public class ZohoAuthService {
                 .body(preTokenBody)
                 .retrieve()
                 .body(ZohoAuthEntity.class);
+
+        if (tokenResponse == null || tokenResponse.getAccessToken() == null) {
+            log.error("[ZohoAuthService] Failed to obtain access token: {}",
+                    tokenResponse == null ? "empty response" : tokenResponse.getError());
+            return "FAILED TO OBTAIN ZOHO ACCESS TOKEN";
+        }
+
+        log.info("[ZohoAuthService] Access token obtained, expires in {}s", tokenResponse.getExpiresIn());
 
         // NOTE: access token set seperately to not overwrite the zsoid written during constructor
         this.zohoAuthEntity.setAccessToken(tokenResponse.getAccessToken());

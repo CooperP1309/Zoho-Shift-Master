@@ -53,6 +53,15 @@ if (-not $db_password) {
     exit 1
 }
 
+# ZohoAuthService requires these at construction time, so fail fast here
+# rather than letting Spring abort with a placeholder-resolution error.
+foreach ($key in 'zoho.client.id', 'zoho.client.secret', 'zoho.client.cliqOrgId', 'zoho.client.host') {
+    if (-not (Get-Prop $key)) {
+        Write-Error "'$key' is not set in application.properties. Re-run .\setup.ps1 (or add the line manually)."
+        exit 1
+    }
+}
+
 $db_url      = Get-Prop 'spring.datasource.url'
 $db_hostport = ($db_url -replace '^jdbc:mysql://', '') -replace '/.*', ''
 $db_port     = $db_hostport -replace '^.*:', ''

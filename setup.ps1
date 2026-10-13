@@ -131,6 +131,33 @@ function Prompt-SmtpProvider {
     }
 }
 
+function Prompt-ZohoAccountsHost {
+    Write-Host "Select your Zoho data centre (accounts server):"
+    Write-Host "  [1] United States  (https://accounts.zoho.com)"
+    Write-Host "  [2] Australia      (https://accounts.zoho.com.au)"
+    Write-Host "  [3] Europe         (https://accounts.zoho.eu)"
+    Write-Host "  [4] India          (https://accounts.zoho.in)"
+    Write-Host "  [5] Custom / Other"
+    Write-Host
+    while ($true) {
+        $choice = Read-Host "(1-5)"
+        switch ($choice) {
+            '1' { return 'https://accounts.zoho.com' }
+            '2' { return 'https://accounts.zoho.com.au' }
+            '3' { return 'https://accounts.zoho.eu' }
+            '4' { return 'https://accounts.zoho.in' }
+            '5' {
+                while ($true) {
+                    $customHost = (Read-Host "Enter the Zoho accounts host (e.g. https://accounts.zoho.jp)").TrimEnd('/')
+                    if ($customHost -match '^https://[A-Za-z0-9.-]+$') { return $customHost }
+                    Write-Host "Error: enter something like 'https://accounts.zoho.jp'." -ForegroundColor Red
+                }
+            }
+            default { Write-Host "Please choose a number from 1 to 5." -ForegroundColor Red }
+        }
+    }
+}
+
 function Read-SecureInput {
     param([string]$Prompt)
     $secure = Read-Host $Prompt -AsSecureString
@@ -292,6 +319,49 @@ while ($true) {
     Write-Host
 }
 
+# ---- Zoho API ----
+Clear-Host
+Write-Host "--------- Zoho API Setup ---------"
+Write-Host
+Write-Host
+Write-Host "These details come from a Self Client created in the Zoho API Console"
+Write-Host "(https://api-console.zoho.com). The client must be allowed the scopes"
+Write-Host "ZohoCliq.Messages.READ and ZohoCliq.Webhooks.CREATE."
+Write-Host "Refer to README.md for more detail."
+Write-Host
+$zoho_host = Prompt-ZohoAccountsHost
+Write-Host
+
+$zoho_client_id = ''
+while ([string]::IsNullOrWhiteSpace($zoho_client_id)) {
+    $zoho_client_id = (Read-Host "Enter the Zoho client ID").Trim()
+    if ([string]::IsNullOrWhiteSpace($zoho_client_id)) {
+        Write-Host "Error: client ID cannot be empty." -ForegroundColor Red
+    }
+}
+
+while ($true) {
+    $zoho_client_secret         = Read-SecureInput "Enter the Zoho client secret"
+    Write-Host
+    $zoho_client_secret_confirm = Read-SecureInput "Confirm the Zoho client secret"
+    Write-Host
+    if ([string]::IsNullOrWhiteSpace($zoho_client_secret)) {
+        Write-Host "Error: client secret cannot be empty." -ForegroundColor Red
+        Write-Host
+        continue
+    }
+    if ($zoho_client_secret -eq $zoho_client_secret_confirm) { break }
+    Write-Host "Error: Secrets do not match, please try again." -ForegroundColor Red
+    Write-Host
+}
+
+$zoho_cliq_org_id = ''
+while ($true) {
+    $zoho_cliq_org_id = (Read-Host "Enter the Zoho Cliq organisation ID (numeric)").Trim()
+    if ($zoho_cliq_org_id -match '^\d+$') { break }
+    Write-Host "Error: organisation ID must be numeric." -ForegroundColor Red
+}
+
 # ---- Summary ----
 Clear-Host
 Write-Host
@@ -306,6 +376,9 @@ Write-Host ("  {0,-26} {1}" -f "Sender email:",            $smtp_sender)
 Write-Host ("  {0,-26} {1}" -f "Public base URL:",         $verification_base_url)
 Write-Host ("  {0,-26} {1}" -f "Secure cookie (HTTPS-only):", $jwt_cookie_secure)
 Write-Host ("  {0,-26} {1}" -f "Admin portal email:",      $admin_email)
+Write-Host ("  {0,-26} {1}" -f "Zoho accounts host:",      $zoho_host)
+Write-Host ("  {0,-26} {1}" -f "Zoho client ID:",          $zoho_client_id)
+Write-Host ("  {0,-26} {1}" -f "Zoho Cliq org ID:",        $zoho_cliq_org_id)
 Write-Host
 Write-Host "Note: All of the above (including passwords) is written in plain text to"
 Write-Host "      src/main/resources/application.properties and can be viewed or"
@@ -376,6 +449,12 @@ spring.mail.properties[mail.smtp.writetimeout]=5000
 # Admin portal credentials
 admin.email=$admin_email
 admin.password=$admin_password
+
+# Zoho API (client credentials, used by ZohoAuthService)
+zoho.client.id=$zoho_client_id
+zoho.client.secret=$zoho_client_secret
+zoho.client.cliqOrgId=$zoho_cliq_org_id
+zoho.client.host=$zoho_host
 "@ | Out-File -FilePath $propsFile -Encoding utf8 -NoNewline
 
 # ---- Deploy MySQL container ----

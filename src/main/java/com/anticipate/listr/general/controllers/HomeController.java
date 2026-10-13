@@ -9,14 +9,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.ui.Model;
 import lombok.extern.slf4j.Slf4j;
 
+import com.anticipate.listr.zoho_client.services.ZohoAuthService;
+
 @RequestMapping("/")
 @Controller
 @Slf4j
 public class HomeController 
 {
+    ZohoAuthService zohoAuthService;
 
-    public HomeController() 
+    public HomeController(ZohoAuthService zohoAuthService) 
     {
+        this.zohoAuthService = zohoAuthService;
     }
     
     @GetMapping("/")
