@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class ZohoClientService {
+public class ZohoAuthService {
 
     private final RestClient restClient;
 
@@ -29,7 +29,7 @@ public class ZohoClientService {
 
     ZohoAuthEntity zohoAuthEntity;
 
-    public ZohoClientService(
+    public ZohoAuthService(
             @Value("${zoho.client.id}") String clientId,
             @Value("${zoho.client.secret}") String clientSecret,
             @Value("${zoho.client.orgId}") String orgId,
