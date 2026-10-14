@@ -35,16 +35,6 @@ public class ZohoClientService
         this.restClient = RestClient.create();
     }
 
-    /*  Posts a test message
-     *
-     *  Posts a fixed message to the configured Cliq chat.
-     *  Returns Zoho's raw response body (empty on success).
-     */
-    public String postTestMessage()
-    {
-        return postMessage("Test message from Station Master Notifier");
-    }
-
     /*  Posts a message
      *
      *  Posts the given text to the configured Cliq chat

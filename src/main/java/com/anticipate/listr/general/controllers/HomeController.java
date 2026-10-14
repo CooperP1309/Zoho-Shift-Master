@@ -83,17 +83,4 @@ public class HomeController
         return "home-page";
     }    
 
-    @GetMapping("test/message")
-    @ResponseBody
-    /*  Sends a test message to Zoho Cliq
-     *
-     *  Temporary endpoint for testing ZohoClientService.
-     *  Returns Zoho's raw response body.
-     */
-    public String sendTestMessage()
-    {
-        String response = zohoClientService.postTestMessage();
-
-        return "Test message sent. Zoho response: " + response;
-    }
 }
