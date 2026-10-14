@@ -65,6 +65,15 @@ db_password=$(prop 'spring.datasource.password') || {
     echo "Error: 'spring.datasource.password' is not set in application.properties." >&2
     exit 1
 }
+# ZohoAuthService requires these at construction time, so fail fast here
+# rather than letting Spring abort with a placeholder-resolution error.
+for key in zoho.client.id zoho.client.secret zoho.client.cliqOrgId zoho.client.host; do
+    if [[ -z "$(prop "$key")" ]]; then
+        echo "Error: '$key' is not set in application.properties." >&2
+        echo "       Re-run ./setup.sh (or add the line manually)." >&2
+        exit 1
+    fi
+done
 db_url=$(prop 'spring.datasource.url')
 db_hostport=${db_url#*://}
 db_hostport=${db_hostport%%/*}

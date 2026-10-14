@@ -6,17 +6,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.ui.Model;
 import lombok.extern.slf4j.Slf4j;
+
+import com.anticipate.listr.zoho_client.services.ZohoClientService;
 
 @RequestMapping("/")
 @Controller
 @Slf4j
 public class HomeController 
 {
+    ZohoClientService zohoClientService;
 
-    public HomeController() 
+    public HomeController(ZohoClientService zohoClientService)
     {
+        this.zohoClientService = zohoClientService;
     }
     
     @GetMapping("/")
@@ -77,4 +82,5 @@ public class HomeController
 
         return "home-page";
     }    
+
 }

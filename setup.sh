@@ -161,6 +161,52 @@ prompt_smtp_provider() {
     printf '%s %s %s\n' "$host" "$port" "$tls"
 }
 
+# Prompts for the Zoho data centre and echoes "accounts_host cliq_host" on
+# stdout. The accounts host issues OAuth tokens; the Cliq host serves the
+# Cliq REST API.
+prompt_zoho_hosts() {
+    local choice domain host cliq_host
+    echo "Select your Zoho data centre:" >&2
+    echo "  [1] United States  (accounts.zoho.com    / cliq.zoho.com)" >&2
+    echo "  [2] Australia      (accounts.zoho.com.au / cliq.zoho.com.au)" >&2
+    echo "  [3] Europe         (accounts.zoho.eu     / cliq.zoho.eu)" >&2
+    echo "  [4] India          (accounts.zoho.in     / cliq.zoho.in)" >&2
+    echo "  [5] Custom / Other" >&2
+    echo >&2
+    while true; do
+        read -rp "(1-5): " choice || { echo "Error: no input." >&2; exit 1; }
+        case "$choice" in
+            1 ) domain=zoho.com; break ;;
+            2 ) domain=zoho.com.au; break ;;
+            3 ) domain=zoho.eu; break ;;
+            4 ) domain=zoho.in; break ;;
+            5 )
+                while true; do
+                    read -rp "Enter the Zoho accounts host (e.g. https://accounts.zoho.jp): " host \
+                        || { echo "Error: no input." >&2; exit 1; }
+                    host=${host%/}
+                    [[ $host =~ ^https://[A-Za-z0-9.-]+$ ]] && break
+                    echo "Error: enter something like 'https://accounts.zoho.jp'." >&2
+                done
+                while true; do
+                    read -rp "Enter the Zoho Cliq host (e.g. https://cliq.zoho.jp): " cliq_host \
+                        || { echo "Error: no input." >&2; exit 1; }
+                    cliq_host=${cliq_host%/}
+                    [[ $cliq_host =~ ^https://[A-Za-z0-9.-]+$ ]] && break
+                    echo "Error: enter something like 'https://cliq.zoho.jp'." >&2
+                done
+                break
+                ;;
+            * ) echo "Please choose a number from 1 to 5." >&2 ;;
+        esac
+    done
+    if [[ -n $domain ]]; then
+        host=https://accounts.$domain
+        cliq_host=https://cliq.$domain
+    fi
+    printf '%s %s\n' "$host" "$cliq_host"
+}
+
 clear
 echo "--------- Welcome to the Server Setup ---------"
 echo
@@ -307,6 +353,55 @@ while true; do
 done
 
 clear
+echo "--------- Zoho API Setup ---------"
+echo
+echo
+echo "These details come from a Self Client created in the Zoho API Console"
+echo "(https://api-console.zoho.com). The client must be allowed the scopes"
+echo "ZohoCliq.Messages.READ and ZohoCliq.Webhooks.CREATE."
+echo "Refer to README.md for more detail."
+echo
+zoho_hosts=$(prompt_zoho_hosts) || exit 1
+read -r zoho_host zoho_cliq_host <<< "$zoho_hosts"
+echo
+zoho_client_id=""
+while [[ -z "$zoho_client_id" ]]; do
+    read -rp "Enter the Zoho client ID: " zoho_client_id
+    zoho_client_id=$(printf '%s' "$zoho_client_id" | tr -d '[:space:]')
+    [[ -z "$zoho_client_id" ]] && echo "Error: client ID cannot be empty." >&2
+done
+while true; do
+    read -rsp "Enter the Zoho client secret: " zoho_client_secret
+    echo
+    read -rsp "Confirm the Zoho client secret: " zoho_client_secret_confirm
+    echo
+    if [[ -z "$zoho_client_secret" ]]; then
+        echo "Error: client secret cannot be empty." >&2
+        echo
+    elif [[ "$zoho_client_secret" == "$zoho_client_secret_confirm" ]]; then
+        break
+    else
+        echo "Error: Secrets do not match, please try again." >&2
+        echo
+    fi
+done
+while true; do
+    read -rp "Enter the Zoho Cliq organisation ID (numeric): " zoho_cliq_org_id
+    zoho_cliq_org_id=$(printf '%s' "$zoho_cliq_org_id" | tr -d '[:space:]')
+    [[ $zoho_cliq_org_id =~ ^[0-9]+$ ]] && break
+    echo "Error: organisation ID must be numeric." >&2
+done
+echo
+echo "The chat ID is the Cliq channel/chat this server posts notifications to"
+echo "(e.g. CT_1234567890123456789_123456789). Refer to README.md for how to find it."
+zoho_chat_id=""
+while [[ -z "$zoho_chat_id" ]]; do
+    read -rp "Enter the Zoho Cliq chat ID: " zoho_chat_id
+    zoho_chat_id=$(printf '%s' "$zoho_chat_id" | tr -d '[:space:]')
+    [[ -z "$zoho_chat_id" ]] && echo "Error: chat ID cannot be empty." >&2
+done
+
+clear
 echo
 echo "--------- Configuration Summary ---------"
 printf '  %-26s %s\n' "Database container name:" "$db_container_name"
@@ -319,6 +414,11 @@ printf '  %-26s %s\n' "Sender email:" "$smtp_sender"
 printf '  %-26s %s\n' "Public base URL:" "$verification_base_url"
 printf '  %-26s %s\n' "Secure cookie (HTTPS-only):" "$jwt_cookie_secure"
 printf '  %-26s %s\n' "Admin portal email:" "$admin_email"
+printf '  %-26s %s\n' "Zoho accounts host:" "$zoho_host"
+printf '  %-26s %s\n' "Zoho Cliq host:" "$zoho_cliq_host"
+printf '  %-26s %s\n' "Zoho client ID:" "$zoho_client_id"
+printf '  %-26s %s\n' "Zoho Cliq org ID:" "$zoho_cliq_org_id"
+printf '  %-26s %s\n' "Zoho Cliq chat ID:" "$zoho_chat_id"
 echo
 echo "Note: All of the above (including passwords) is written in plain text to"
 echo "      src/main/resources/application.properties and can be viewed or"
@@ -381,6 +481,17 @@ spring.mail.properties[mail.smtp.writetimeout]=5000
 # Admin portal credentials
 admin.email=$admin_email
 admin.password=$admin_password
+
+# Zoho API (client credentials, used by ZohoAuthService)
+zoho.client.id=$zoho_client_id
+zoho.client.secret=$zoho_client_secret
+zoho.client.cliqOrgId=$zoho_cliq_org_id
+zoho.client.host=$zoho_host
+
+# Zoho Cliq API host (same data centre as zoho.client.host)
+zoho.cliq.host=$zoho_cliq_host
+# Zoho Cliq chat/channel this server posts notifications to
+zoho.cliq.chatId=$zoho_chat_id
 " > ./src/main/resources/application.properties
 
 # deploying MySQL container
