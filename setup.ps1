@@ -131,27 +131,40 @@ function Prompt-SmtpProvider {
     }
 }
 
-function Prompt-ZohoAccountsHost {
-    Write-Host "Select your Zoho data centre (accounts server):"
-    Write-Host "  [1] United States  (https://accounts.zoho.com)"
-    Write-Host "  [2] Australia      (https://accounts.zoho.com.au)"
-    Write-Host "  [3] Europe         (https://accounts.zoho.eu)"
-    Write-Host "  [4] India          (https://accounts.zoho.in)"
+# Returns @{ Accounts = ...; Cliq = ... }. The accounts host issues OAuth
+# tokens; the Cliq host serves the Cliq REST API.
+function Prompt-ZohoHosts {
+    Write-Host "Select your Zoho data centre:"
+    Write-Host "  [1] United States  (accounts.zoho.com    / cliq.zoho.com)"
+    Write-Host "  [2] Australia      (accounts.zoho.com.au / cliq.zoho.com.au)"
+    Write-Host "  [3] Europe         (accounts.zoho.eu     / cliq.zoho.eu)"
+    Write-Host "  [4] India          (accounts.zoho.in     / cliq.zoho.in)"
     Write-Host "  [5] Custom / Other"
     Write-Host
     while ($true) {
         $choice = Read-Host "(1-5)"
+        $domain = switch ($choice) {
+            '1' { 'zoho.com' }
+            '2' { 'zoho.com.au' }
+            '3' { 'zoho.eu' }
+            '4' { 'zoho.in' }
+        }
+        if ($domain) {
+            return @{ Accounts = "https://accounts.$domain"; Cliq = "https://cliq.$domain" }
+        }
         switch ($choice) {
-            '1' { return 'https://accounts.zoho.com' }
-            '2' { return 'https://accounts.zoho.com.au' }
-            '3' { return 'https://accounts.zoho.eu' }
-            '4' { return 'https://accounts.zoho.in' }
             '5' {
                 while ($true) {
                     $customHost = (Read-Host "Enter the Zoho accounts host (e.g. https://accounts.zoho.jp)").TrimEnd('/')
-                    if ($customHost -match '^https://[A-Za-z0-9.-]+$') { return $customHost }
+                    if ($customHost -match '^https://[A-Za-z0-9.-]+$') { break }
                     Write-Host "Error: enter something like 'https://accounts.zoho.jp'." -ForegroundColor Red
                 }
+                while ($true) {
+                    $customCliqHost = (Read-Host "Enter the Zoho Cliq host (e.g. https://cliq.zoho.jp)").TrimEnd('/')
+                    if ($customCliqHost -match '^https://[A-Za-z0-9.-]+$') { break }
+                    Write-Host "Error: enter something like 'https://cliq.zoho.jp'." -ForegroundColor Red
+                }
+                return @{ Accounts = $customHost; Cliq = $customCliqHost }
             }
             default { Write-Host "Please choose a number from 1 to 5." -ForegroundColor Red }
         }
@@ -329,7 +342,9 @@ Write-Host "(https://api-console.zoho.com). The client must be allowed the scope
 Write-Host "ZohoCliq.Messages.READ and ZohoCliq.Webhooks.CREATE."
 Write-Host "Refer to README.md for more detail."
 Write-Host
-$zoho_host = Prompt-ZohoAccountsHost
+$zoho_hosts     = Prompt-ZohoHosts
+$zoho_host      = $zoho_hosts.Accounts
+$zoho_cliq_host = $zoho_hosts.Cliq
 Write-Host
 
 $zoho_client_id = ''
@@ -362,6 +377,17 @@ while ($true) {
     Write-Host "Error: organisation ID must be numeric." -ForegroundColor Red
 }
 
+Write-Host
+Write-Host "The chat ID is the Cliq channel/chat this server posts notifications to"
+Write-Host "(e.g. CT_1234567890123456789_123456789). Refer to README.md for how to find it."
+$zoho_chat_id = ''
+while ([string]::IsNullOrWhiteSpace($zoho_chat_id)) {
+    $zoho_chat_id = (Read-Host "Enter the Zoho Cliq chat ID") -replace '\s', ''
+    if ([string]::IsNullOrWhiteSpace($zoho_chat_id)) {
+        Write-Host "Error: chat ID cannot be empty." -ForegroundColor Red
+    }
+}
+
 # ---- Summary ----
 Clear-Host
 Write-Host
@@ -377,8 +403,10 @@ Write-Host ("  {0,-26} {1}" -f "Public base URL:",         $verification_base_ur
 Write-Host ("  {0,-26} {1}" -f "Secure cookie (HTTPS-only):", $jwt_cookie_secure)
 Write-Host ("  {0,-26} {1}" -f "Admin portal email:",      $admin_email)
 Write-Host ("  {0,-26} {1}" -f "Zoho accounts host:",      $zoho_host)
+Write-Host ("  {0,-26} {1}" -f "Zoho Cliq host:",          $zoho_cliq_host)
 Write-Host ("  {0,-26} {1}" -f "Zoho client ID:",          $zoho_client_id)
 Write-Host ("  {0,-26} {1}" -f "Zoho Cliq org ID:",        $zoho_cliq_org_id)
+Write-Host ("  {0,-26} {1}" -f "Zoho Cliq chat ID:",       $zoho_chat_id)
 Write-Host
 Write-Host "Note: All of the above (including passwords) is written in plain text to"
 Write-Host "      src/main/resources/application.properties and can be viewed or"
@@ -455,6 +483,11 @@ zoho.client.id=$zoho_client_id
 zoho.client.secret=$zoho_client_secret
 zoho.client.cliqOrgId=$zoho_cliq_org_id
 zoho.client.host=$zoho_host
+
+# Zoho Cliq API host (same data centre as zoho.client.host)
+zoho.cliq.host=$zoho_cliq_host
+# Zoho Cliq chat/channel this server posts notifications to
+zoho.cliq.chatId=$zoho_chat_id
 "@ | Out-File -FilePath $propsFile -Encoding utf8 -NoNewline
 
 # ---- Deploy MySQL container ----

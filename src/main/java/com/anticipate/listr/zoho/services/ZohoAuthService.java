@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ZohoAuthService 
 {
-
     private final RestClient restClient;
 
     private final String preTokenBody;
@@ -38,7 +37,6 @@ public class ZohoAuthService
             @Value("${zoho.client.cliqOrgId}") String cliqOrgId,
             @Value("${zoho.client.host}") String tokenHost) 
     {
-        
         this.restClient = RestClient.create();
 
         this.preTokenBody = "grant_type=client_credentials&client_id=" + clientId +
@@ -85,6 +83,18 @@ public class ZohoAuthService
 
         this.zohoAuthEntity.setAccessToken(tokenResponse.getAccessToken());
         this.zohoAuthEntity.setExpiryTime(tokenResponse.getExpiresIn());
+    }
+
+    /*  Gets this services Auth entity
+     *
+     *  This function returns the auth entity of this module.
+     *  This function is responsible for wrapping refreshing.
+     */
+    public ZohoAuthEntity getZohoAuthEntity()
+    {
+        ensureValidAccessToken();
+        
+        return this.zohoAuthEntity;
     }
 
     /*

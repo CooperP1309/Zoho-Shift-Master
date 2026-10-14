@@ -6,21 +6,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.ui.Model;
 import lombok.extern.slf4j.Slf4j;
 
-import com.anticipate.listr.zoho_client.services.ZohoAuthService;
+import com.anticipate.listr.zoho_client.services.ZohoClientService;
 
 @RequestMapping("/")
 @Controller
 @Slf4j
 public class HomeController 
 {
-    ZohoAuthService zohoAuthService;
+    ZohoClientService zohoClientService;
 
-    public HomeController(ZohoAuthService zohoAuthService) 
+    public HomeController(ZohoClientService zohoClientService)
     {
-        this.zohoAuthService = zohoAuthService;
+        this.zohoClientService = zohoClientService;
     }
     
     @GetMapping("/")
@@ -81,4 +82,18 @@ public class HomeController
 
         return "home-page";
     }    
+
+    @GetMapping("test/message")
+    @ResponseBody
+    /*  Sends a test message to Zoho Cliq
+     *
+     *  Temporary endpoint for testing ZohoClientService.
+     *  Returns Zoho's raw response body.
+     */
+    public String sendTestMessage()
+    {
+        String response = zohoClientService.postTestMessage();
+
+        return "Test message sent. Zoho response: " + response;
+    }
 }
