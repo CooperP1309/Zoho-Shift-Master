@@ -83,18 +83,4 @@ public class HomeController
         return "home-page";
     }
 
-    @GetMapping("test/message")
-    @ResponseBody
-    /*  Sends a test mention to Zoho Cliq
-     *
-     *  TEMPORARY endpoint for checking the {@userId} mention
-     *  syntax used by ShiftSchedulerService renders as a ping.
-     *  Returns Zoho's raw response body.
-     */
-    public String sendTestMessage()
-    {
-        String response = zohoClientService.postMessage("Hi {@7003167669}, this is a test of the station master mention syntax!");
-
-        return "Test message sent. Zoho response: " + response;
-    }
 }
