@@ -2,6 +2,7 @@ package com.anticipate.listr.zoho_client.services;
 
 /* spring specific modules */
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -31,13 +32,21 @@ public class ZohoAuthService
 
     ZohoAuthEntity zohoAuthEntity;
 
+    @Autowired
     public ZohoAuthService(
             @Value("${zoho.client.id}") String clientId,
             @Value("${zoho.client.secret}") String clientSecret,
             @Value("${zoho.client.cliqOrgId}") String cliqOrgId,
-            @Value("${zoho.client.host}") String tokenHost) 
+            @Value("${zoho.client.host}") String tokenHost)
     {
-        this.restClient = RestClient.create();
+        this(clientId, clientSecret, cliqOrgId, tokenHost, RestClient.builder());
+    }
+
+    // allows tests to bind a mock server to the rest client
+    ZohoAuthService(String clientId, String clientSecret, String cliqOrgId,
+                    String tokenHost, RestClient.Builder restClientBuilder)
+    {
+        this.restClient = restClientBuilder.build();
 
         this.preTokenBody = "grant_type=client_credentials&client_id=" + clientId +
                             "&client_secret=" + clientSecret +

@@ -2,6 +2,7 @@ package com.anticipate.listr.zoho_client.services;
 
 /* spring specific modules */
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -25,14 +26,22 @@ public class ZohoClientService
 
     private final RestClient restClient;
 
+    @Autowired
     public ZohoClientService(@Value("${zoho.cliq.chatId}") String chatId,
                              @Value("${zoho.cliq.host}") String cliqHost,
                              ZohoAuthService zohoAuthService)
     {
+        this(chatId, cliqHost, zohoAuthService, RestClient.builder());
+    }
+
+    // allows tests to bind a mock server to the rest client
+    ZohoClientService(String chatId, String cliqHost, ZohoAuthService zohoAuthService,
+                      RestClient.Builder restClientBuilder)
+    {
         this.chatId = chatId;
         this.cliqHost = cliqHost;
         this.zohoAuthService = zohoAuthService;
-        this.restClient = RestClient.create();
+        this.restClient = restClientBuilder.build();
     }
 
     /*  Posts a message
