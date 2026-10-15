@@ -9,10 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -26,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,7 +50,7 @@ class ShiftSchedulerServiceTest
     private ShiftSchedulerService serviceAt(LocalDateTime sydneyTime)
     {
         Clock clock = Clock.fixed(ZonedDateTime.of(sydneyTime, SYDNEY).toInstant(), SYDNEY);
-        return new ShiftSchedulerService(shiftSlotRepository, zohoClientService, clock);
+        return new ShiftSchedulerService(shiftSlotRepository, zohoClientService, clock, Duration.ZERO);
     }
 
     private ShiftSlot slotWith(StationMaster stationMaster)
@@ -148,5 +152,36 @@ class ShiftSchedulerServiceTest
         doThrow(new ResourceAccessException("Cliq unreachable")).when(zohoClientService).postMessage(anyString());
 
         assertDoesNotThrow(() -> serviceAt(MONDAY_3PM).announceCurrentShift());
+
+        // original attempt plus exactly one retry
+        verify(zohoClientService, times(2)).postMessage(anyString());
+    }
+
+    @Test
+    void announceCurrentShift_retriesOnceAfterConnectionError()
+    {
+        StationMaster cooper = new StationMaster().setDisplayName("Cooper").setCliqUserId("12345678");
+        when(shiftSlotRepository.findByDayOfWeekAndStartTime(DayOfWeek.MONDAY, LocalTime.of(15, 0)))
+                .thenReturn(Optional.of(slotWith(cooper)));
+        when(zohoClientService.postMessage(anyString()))
+                .thenThrow(new ResourceAccessException("Connection reset"))
+                .thenReturn("");
+
+        serviceAt(MONDAY_3PM).announceCurrentShift();
+
+        verify(zohoClientService, times(2)).postMessage("Hi {@12345678}, time to start your station master shift!");
+    }
+
+    @Test
+    void announceCurrentShift_doesNotRetryWhenZohoRejectsRequest()
+    {
+        StationMaster cooper = new StationMaster().setDisplayName("Cooper").setCliqUserId("12345678");
+        when(shiftSlotRepository.findByDayOfWeekAndStartTime(DayOfWeek.MONDAY, LocalTime.of(15, 0)))
+                .thenReturn(Optional.of(slotWith(cooper)));
+        doThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED)).when(zohoClientService).postMessage(anyString());
+
+        assertDoesNotThrow(() -> serviceAt(MONDAY_3PM).announceCurrentShift());
+
+        verify(zohoClientService, times(1)).postMessage(anyString());
     }
 }
