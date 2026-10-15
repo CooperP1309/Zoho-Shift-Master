@@ -3,11 +3,13 @@ package com.anticipate.listr.scheduler.services;
 import com.anticipate.listr.scheduler.entities.ShiftSlot;
 import com.anticipate.listr.scheduler.entities.StationMaster;
 import com.anticipate.listr.scheduler.repositories.ShiftSlotRepository;
+import com.anticipate.listr.zoho_client.services.ZohoClientService;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -17,9 +19,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,10 +40,13 @@ class ShiftSchedulerServiceTest
     @Mock
     private ShiftSlotRepository shiftSlotRepository;
 
+    @Mock
+    private ZohoClientService zohoClientService;
+
     private ShiftSchedulerService serviceAt(LocalDateTime sydneyTime)
     {
         Clock clock = Clock.fixed(ZonedDateTime.of(sydneyTime, SYDNEY).toInstant(), SYDNEY);
-        return new ShiftSchedulerService(shiftSlotRepository, clock);
+        return new ShiftSchedulerService(shiftSlotRepository, zohoClientService, clock);
     }
 
     private ShiftSlot slotWith(StationMaster stationMaster)
@@ -106,5 +114,39 @@ class ShiftSchedulerServiceTest
         assertTrue(serviceAt(MONDAY_3PM.withHour(20)).buildCurrentShiftMessage().isEmpty());
 
         verify(shiftSlotRepository, never()).findByDayOfWeekAndStartTime(any(), any());
+    }
+
+    @Test
+    void announceCurrentShift_postsMentionMessageToCliq()
+    {
+        StationMaster cooper = new StationMaster().setDisplayName("Cooper").setCliqUserId("12345678");
+        when(shiftSlotRepository.findByDayOfWeekAndStartTime(DayOfWeek.MONDAY, LocalTime.of(15, 0)))
+                .thenReturn(Optional.of(slotWith(cooper)));
+
+        serviceAt(MONDAY_3PM).announceCurrentShift();
+
+        verify(zohoClientService).postMessage("Hi {@12345678}, time to start your station master shift!");
+    }
+
+    @Test
+    void announceCurrentShift_postsNothingWhenSlotUnassigned()
+    {
+        when(shiftSlotRepository.findByDayOfWeekAndStartTime(DayOfWeek.MONDAY, LocalTime.of(15, 0)))
+                .thenReturn(Optional.of(slotWith(null)));
+
+        serviceAt(MONDAY_3PM).announceCurrentShift();
+
+        verify(zohoClientService, never()).postMessage(anyString());
+    }
+
+    @Test
+    void announceCurrentShift_logsInsteadOfThrowingWhenCliqFails()
+    {
+        StationMaster cooper = new StationMaster().setDisplayName("Cooper").setCliqUserId("12345678");
+        when(shiftSlotRepository.findByDayOfWeekAndStartTime(DayOfWeek.MONDAY, LocalTime.of(15, 0)))
+                .thenReturn(Optional.of(slotWith(cooper)));
+        doThrow(new ResourceAccessException("Cliq unreachable")).when(zohoClientService).postMessage(anyString());
+
+        assertDoesNotThrow(() -> serviceAt(MONDAY_3PM).announceCurrentShift());
     }
 }
