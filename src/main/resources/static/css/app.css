@@ -206,6 +206,7 @@ button,
     background: var(--accent);
     border: 1px solid transparent;
     border-radius: 8px;
+    text-align: center;
     cursor: pointer;
 }
 

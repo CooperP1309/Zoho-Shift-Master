@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landing Page</title>
+    <title>Station Master Notifier</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 
-    <h1>Welcome to My Landing Page</h1>
-    <p>This is a super simple website built with basic HTML.</p>
+<main class="auth">
+    <div class="card">
+        <h1>Station Master Notifier</h1>
+        <p class="muted">Pings the rostered station master in the Cliq channel at the start of each two-hour shift.</p>
 
-    <button type="button" onclick="window.location.href='auth/login-page'">Login</button>
+        <a class="button button-block" th:href="@{/auth/login-page}">Log in</a>
+    </div>
+</main>
 
 </body>
 </html>
