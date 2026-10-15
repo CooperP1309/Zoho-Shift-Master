@@ -488,6 +488,13 @@ zoho.client.host=$zoho_host
 zoho.cliq.host=$zoho_cliq_host
 # Zoho Cliq chat/channel this server posts notifications to
 zoho.cliq.chatId=$zoho_chat_id
+
+# Station master scheduler
+# Timezone the roster and cron are evaluated in (handles daylight saving)
+scheduler.zone=Australia/Sydney
+# Fires at each shift change: sec min hour day-of-month month day-of-week
+# i.e. 7am, 9am, 11am, 1pm, 3pm, 5pm, Monday to Friday
+scheduler.cron=0 0 7-17/2 * * MON-FRI
 "@ | Out-File -FilePath $propsFile -Encoding utf8 -NoNewline
 
 # ---- Deploy MySQL container ----
