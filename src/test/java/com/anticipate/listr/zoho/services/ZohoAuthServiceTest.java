@@ -54,7 +54,7 @@ class ZohoAuthServiceTest
                 .andExpect(content().string(containsString("grant_type=client_credentials")))
                 .andExpect(content().string(containsString("client_id=client-id")))
                 .andExpect(content().string(containsString("client_secret=client-secret")))
-                .andExpect(content().string(containsString("scope=ZohoCliq.Messages.READ,ZohoCliq.Webhooks.CREATE")))
+                .andExpect(content().string(containsString("scope=ZohoCliq.Messages.READ,ZohoCliq.Webhooks.CREATE,ZohoCliq.Users.READ")))
                 .andExpect(content().string(containsString("soid=ZohoCliq.12345")))
                 .andRespond(withSuccess(tokenResponse("first-token", 3600), MediaType.APPLICATION_JSON));
 

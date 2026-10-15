@@ -50,7 +50,7 @@ public class ZohoAuthService
 
         this.preTokenBody = "grant_type=client_credentials&client_id=" + clientId +
                             "&client_secret=" + clientSecret +
-                            "&scope=ZohoCliq.Messages.READ,ZohoCliq.Webhooks.CREATE" +
+                            "&scope=ZohoCliq.Messages.READ,ZohoCliq.Webhooks.CREATE,ZohoCliq.Users.READ" +
                             "&soid=ZohoCliq." + cliqOrgId;
 
         this.tokenHost = tokenHost;

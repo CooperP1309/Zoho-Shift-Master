@@ -5,3 +5,6 @@
 [ ] FIX AUTH HEADER REFRESHING
 
 [ ] REMOVE PRINTING OF THE ZOHO AUTH TOKEN ON STARTUP
+
+[ ] CLIQ MENTION SYNTAX (tested, works): {@<cliqUserId>} in the message text, e.g. "{@2938475638} time to start your station master shift!"
+    Get user IDs via GET https://cliq.zoho.com.au/api/v2/users (needs ZohoCliq.Users.READ scope)

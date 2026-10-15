@@ -47,5 +47,75 @@
     </tbody>
 </table>
 
+<h2>Station Masters</h2>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Cliq user ID</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="stationMaster : ${stationMasters}">
+            <td th:text="${stationMaster.id}"></td>
+            <td th:text="${stationMaster.displayName}"></td>
+            <td th:text="${stationMaster.cliqUserId}"></td>
+            <td>
+                <form method="post" th:action="@{/admin/station-masters/{id}/delete(id=${stationMaster.id})}"
+                      onsubmit="return confirm('Delete this station master? They will be removed from the roster.')" style="display:inline">
+                    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<form method="post" th:action="@{/admin/station-masters}">
+    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+    <input type="text" name="displayName" placeholder="Name" required />
+    <input type="text" name="cliqUserId" placeholder="Cliq user ID" required />
+    <button type="submit">Add station master</button>
+</form>
+
+<h2>Station Master Roster</h2>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Time Slot</th>
+            <th th:each="day : ${rosterDays}" th:text="${#strings.capitalize(#strings.toLowerCase(day.name()))}"></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="row : ${rosterRows}">
+            <td th:text="${row.label()}"></td>
+            <td th:each="cell : ${row.cells()}">
+                <form method="post" th:action="@{/admin/shift-slots}" style="display:inline">
+                    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+                    <input type="hidden" name="dayOfWeek" th:value="${cell.day()}" />
+                    <input type="hidden" name="startTime" th:value="${row.startTime()}" />
+                    <select name="stationMasterId">
+                        <option value="">(unassigned)</option>
+                        <option th:each="stationMaster : ${stationMasters}"
+                                th:value="${stationMaster.id}"
+                                th:text="${stationMaster.displayName}"
+                                th:selected="${stationMaster.id == cell.stationMasterId()}"></option>
+                    </select>
+                    <button type="submit">Save</button>
+                </form>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<form method="post" th:action="@{/admin/scheduler/trigger-now}">
+    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+    <button type="submit">Send current shift notification now</button>
+</form>
+
 </body>
 </html>
