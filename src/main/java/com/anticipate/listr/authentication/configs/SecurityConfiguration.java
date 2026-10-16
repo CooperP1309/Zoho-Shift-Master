@@ -59,7 +59,10 @@ public class SecurityConfiguration
                     "/auth/forgot-password",
                     "/auth/verify/**", "/auth/reset-password/**"
                 ).permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // user account management stays admin only, must come before the wider /admin/** rule
+                .requestMatchers("/admin/delete-user/**", "/admin/set-account-enabled").hasRole("ADMIN")
+                // the rest of the console (roster, station masters, send now) is open to standard users
+                .requestMatchers("/admin/**").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,7 @@
 <main class="container">
 
     <h1>Admin Console</h1>
-    <p class="muted">Manage the station master roster and user accounts.</p>
+    <p class="muted">Manage the station master roster.<span sec:authorize="hasRole('ADMIN')"> As an admin, you can also manage user accounts.</span></p>
 
     <!-- ===== Roster ===== -->
     <section class="card">
@@ -116,7 +116,7 @@
     </section>
 
     <!-- ===== Users ===== -->
-    <section class="card">
+    <section class="card" sec:authorize="hasRole('ADMIN')">
         <div class="card-header">
             <div>
                 <h2>Users</h2>

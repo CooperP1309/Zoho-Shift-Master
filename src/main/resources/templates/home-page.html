@@ -13,7 +13,7 @@
         <a class="brand" th:href="@{/home-page}">Station Master Notifier</a>
         <nav>
             <a th:href="@{/home-page}">Home</a>
-            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}">Admin</a>
+            <a sec:authorize="hasAnyRole('USER', 'ADMIN')" th:href="@{/admin/dashboard}">Admin</a>
         </nav>
     </div>
 </header>
@@ -23,7 +23,7 @@
         <h1 th:text="${username != null} ? |Welcome back, ${username}| : 'Welcome back'">Welcome back</h1>
         <p class="muted">The station master for each two-hour shift is pinged in the Cliq channel when their shift starts.</p>
 
-        <a sec:authorize="hasRole('ADMIN')" class="button" th:href="@{/admin/dashboard}">Open admin console</a>
+        <a sec:authorize="hasAnyRole('USER', 'ADMIN')" class="button" th:href="@{/admin/dashboard}">Open admin console</a>
     </section>
 </main>
 
