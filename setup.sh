@@ -501,6 +501,73 @@ if [[ $turnstile_enabled == true ]]; then
 fi
 
 clear
+echo "--------- Zoho Cliq Setup ---------"
+echo
+echo
+echo "Which country / data centre is your Zoho account in?"
+echo
+echo "  [1] United States  (cliq.zoho.com)"
+echo "  [2] Australia      (cliq.zoho.com.au)"
+echo "  [3] Europe         (cliq.zoho.eu)"
+echo "  [4] India          (cliq.zoho.in)"
+echo "  [5] Custom / Other"
+echo
+while true; do
+    read -rp "(1-5): " cliq_region_choice || { echo "Error: no input." >&2; exit 1; }
+    case "$cliq_region_choice" in
+        1 ) cliq_host=cliq.zoho.com; break ;;
+        2 ) cliq_host=cliq.zoho.com.au; break ;;
+        3 ) cliq_host=cliq.zoho.eu; break ;;
+        4 ) cliq_host=cliq.zoho.in; break ;;
+        5 )
+            while true; do
+                read -rp "Enter your Zoho Cliq host (e.g. cliq.zoho.jp): " cliq_host \
+                    || { echo "Error: no input." >&2; exit 1; }
+                cliq_host=${cliq_host#http://}
+                cliq_host=${cliq_host#https://}
+                cliq_host=${cliq_host%/}
+                [[ $cliq_host =~ ^[A-Za-z0-9.-]+$ ]] && break
+                echo "Error: '$cliq_host' is not a valid hostname." >&2
+            done
+            break
+            ;;
+        * ) echo "Please choose a number from 1 to 5." >&2 ;;
+    esac
+done
+echo
+while true; do
+    read -rsp "Enter your Zoho Cliq API key: " cliq_api_key
+    echo
+    read -rsp "Confirm your Zoho Cliq API key: " cliq_api_key_confirm
+    echo
+    if [[ -z "$cliq_api_key" ]]; then
+        echo "Error: the API key cannot be empty." >&2
+    elif [[ "$cliq_api_key" == "$cliq_api_key_confirm" ]]; then
+        break
+    else
+        echo "Error: API keys do not match, please try again." >&2
+    fi
+    echo
+done
+echo
+echo "Next, enter the name of the Zoho Cliq channel to post to."
+echo
+echo "  IMPORTANT: type the channel name in ALL LOWER CASE, even if the channel"
+echo "             itself uses capital letters (e.g. 'Shift Roster' -> 'shift roster')."
+echo
+while true; do
+    read -rp "Zoho Cliq channel name (lower case): " cliq_channel_name \
+        || { echo "Error: no input." >&2; exit 1; }
+    if [[ -z "$cliq_channel_name" ]]; then
+        echo "Error: the channel name cannot be empty." >&2
+    elif [[ "$cliq_channel_name" =~ [A-Z] ]]; then
+        echo "Error: the channel name must be all lower case (e.g. '${cliq_channel_name,,}')." >&2
+    else
+        break
+    fi
+done
+
+clear
 echo "--------- Admin Portal Setup ---------"
 echo
 echo
@@ -550,6 +617,8 @@ printf '  %-26s %s\n' "Turnstile captcha:" "$turnstile_enabled"
 if [[ $turnstile_enabled == true ]]; then
     printf '  %-26s %s\n' "Turnstile site key:" "$turnstile_site_key"
 fi
+printf '  %-26s %s\n' "Zoho Cliq host:" "$cliq_host"
+printf '  %-26s %s\n' "Zoho Cliq channel:" "$cliq_channel_name"
 printf '  %-26s %s\n' "Admin portal email:" "$admin_email"
 echo
 echo "Note: All of the above (including passwords) is written in plain text to"
@@ -688,6 +757,12 @@ spring.mail.properties[mail.smtp.writetimeout]=5000
 captcha.turnstile.enabled=$turnstile_enabled
 captcha.turnstile.site-key=$turnstile_site_key
 captcha.turnstile.secret-key=$turnstile_secret_key
+
+# Zoho Cliq integration. host is the region-specific Cliq domain and
+# channelName must be the channel's name in all lower case.
+zoho.cliq.zApiKey=$cliq_api_key
+zoho.cliq.channelName=$cliq_channel_name
+zoho.cliq.host=$cliq_host
 
 # Admin portal credentials
 admin.email=$admin_email

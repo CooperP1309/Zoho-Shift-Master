@@ -501,6 +501,71 @@ if ($turnstile_enabled -eq 'true') {
     }
 }
 
+# ---- Zoho Cliq ----
+Clear-Host
+Write-Host "--------- Zoho Cliq Setup ---------"
+Write-Host
+Write-Host
+Write-Host "Which country / data centre is your Zoho account in?"
+Write-Host
+Write-Host "  [1] United States  (cliq.zoho.com)"
+Write-Host "  [2] Australia      (cliq.zoho.com.au)"
+Write-Host "  [3] Europe         (cliq.zoho.eu)"
+Write-Host "  [4] India          (cliq.zoho.in)"
+Write-Host "  [5] Custom / Other"
+Write-Host
+$cliq_host = ''
+while ($true) {
+    $cliqRegionChoice = Read-Host "(1-5)"
+    switch ($cliqRegionChoice) {
+        '1' { $cliq_host = 'cliq.zoho.com' }
+        '2' { $cliq_host = 'cliq.zoho.com.au' }
+        '3' { $cliq_host = 'cliq.zoho.eu' }
+        '4' { $cliq_host = 'cliq.zoho.in' }
+        '5' {
+            while ($true) {
+                $cliq_host = (Read-Host "Enter your Zoho Cliq host (e.g. cliq.zoho.jp)") -replace '^https?://', ''
+                $cliq_host = $cliq_host.TrimEnd('/')
+                if ($cliq_host -match '^[A-Za-z0-9.-]+$') { break }
+                Write-Host "Error: '$cliq_host' is not a valid hostname." -ForegroundColor Red
+            }
+        }
+        default { Write-Host "Please choose a number from 1 to 5." -ForegroundColor Red }
+    }
+    if ($cliq_host) { break }
+}
+Write-Host
+while ($true) {
+    $cliq_api_key         = Read-SecureInput "Enter your Zoho Cliq API key"
+    Write-Host
+    $cliq_api_key_confirm = Read-SecureInput "Confirm your Zoho Cliq API key"
+    Write-Host
+    if ([string]::IsNullOrEmpty($cliq_api_key)) {
+        Write-Host "Error: the API key cannot be empty." -ForegroundColor Red
+    } elseif ($cliq_api_key -eq $cliq_api_key_confirm) {
+        break
+    } else {
+        Write-Host "Error: API keys do not match, please try again." -ForegroundColor Red
+    }
+    Write-Host
+}
+Write-Host
+Write-Host "Next, enter the name of the Zoho Cliq channel to post to."
+Write-Host
+Write-Host "  IMPORTANT: type the channel name in ALL LOWER CASE, even if the channel" -ForegroundColor Yellow
+Write-Host "             itself uses capital letters (e.g. 'Shift Roster' -> 'shift roster')." -ForegroundColor Yellow
+Write-Host
+while ($true) {
+    $cliq_channel_name = Read-Host "Zoho Cliq channel name (lower case)"
+    if ([string]::IsNullOrEmpty($cliq_channel_name)) {
+        Write-Host "Error: the channel name cannot be empty." -ForegroundColor Red
+    } elseif ($cliq_channel_name -cmatch '[A-Z]') {
+        Write-Host "Error: the channel name must be all lower case (e.g. '$($cliq_channel_name.ToLower())')." -ForegroundColor Red
+    } else {
+        break
+    }
+}
+
 # ---- Admin portal ----
 Clear-Host
 Write-Host "--------- Admin Portal Setup ---------"
@@ -554,6 +619,8 @@ Write-Host ("  {0,-26} {1}" -f "Turnstile captcha:",       $turnstile_enabled)
 if ($turnstile_enabled -eq 'true') {
     Write-Host ("  {0,-26} {1}" -f "Turnstile site key:",  $turnstile_site_key)
 }
+Write-Host ("  {0,-26} {1}" -f "Zoho Cliq host:",          $cliq_host)
+Write-Host ("  {0,-26} {1}" -f "Zoho Cliq channel:",       $cliq_channel_name)
 Write-Host ("  {0,-26} {1}" -f "Admin portal email:",      $admin_email)
 Write-Host
 Write-Host "Note: All of the above (including passwords) is written in plain text to"
@@ -712,6 +779,12 @@ spring.mail.properties[mail.smtp.writetimeout]=5000
 captcha.turnstile.enabled=$turnstile_enabled
 captcha.turnstile.site-key=$turnstile_site_key
 captcha.turnstile.secret-key=$turnstile_secret_key
+
+# Zoho Cliq integration. host is the region-specific Cliq domain and
+# channelName must be the channel's name in all lower case.
+zoho.cliq.zApiKey=$cliq_api_key
+zoho.cliq.channelName=$cliq_channel_name
+zoho.cliq.host=$cliq_host
 
 # Admin portal credentials
 admin.email=$admin_email
