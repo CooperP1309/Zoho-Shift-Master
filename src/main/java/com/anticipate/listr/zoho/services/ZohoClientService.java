@@ -41,11 +41,13 @@ public class ZohoClientService
     }
 
     // allows tests to bind a mock server to the rest client
-    ZohoClientService(String chatId, String cliqHost, ZohoAuthService zohoAuthService,
-                      RestClient.Builder restClientBuilder)
+    ZohoClientService(String chatId, String cliqHost, String channelName, String zApiKey,
+                      ZohoAuthService zohoAuthService, RestClient.Builder restClientBuilder)
     {
         this.chatId = chatId;
         this.cliqHost = cliqHost;
+        this.channelName = channelName;
+        this.zApiKey = zApiKey;
         this.zohoAuthService = zohoAuthService;
         this.restClient = restClientBuilder.build();
     }

@@ -20,7 +20,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
@@ -32,7 +31,10 @@ class ZohoClientServiceTest
 {
     private static final String CLIQ_HOST = "https://cliq.zoho.test";
     private static final String CHAT_ID = "CT_1234567890123456789_123456789";
-    private static final String MESSAGE_URI = CLIQ_HOST + "/api/v2/chats/" + CHAT_ID + "/message";
+    private static final String CHANNEL_NAME = "testchannel";
+    private static final String ZAPI_KEY = "test-zapikey";
+    private static final String MESSAGE_URI = CLIQ_HOST + "/api/v2/channelsbyname/" + CHANNEL_NAME
+            + "/message?zapikey=" + ZAPI_KEY;
 
     @Mock
     private ZohoAuthService zohoAuthService;
@@ -47,7 +49,8 @@ class ZohoClientServiceTest
         RestClient.Builder restClientBuilder = RestClient.builder();
         server = MockRestServiceServer.bindTo(restClientBuilder).build();
 
-        zohoClientService = new ZohoClientService(CHAT_ID, CLIQ_HOST, zohoAuthService, restClientBuilder);
+        zohoClientService = new ZohoClientService(CHAT_ID, CLIQ_HOST, CHANNEL_NAME, ZAPI_KEY,
+                zohoAuthService, restClientBuilder);
 
         ZohoAuthEntity authEntity = new ZohoAuthEntity();
         authEntity.setAccessToken("test-token");
@@ -58,12 +61,10 @@ class ZohoClientServiceTest
     }
 
     @Test
-    void postMessage_postsTextToConfiguredChatWithAuthHeaders()
+    void postMessage_postsTextToConfiguredChannelWithZapiKey()
     {
         server.expect(requestTo(MESSAGE_URI))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(header("Authorization", "Zoho-oauthtoken test-token"))
-                .andExpect(header("orgId", "12345"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("{\"text\":\"hello\"}"))
                 .andRespond(withNoContent());
