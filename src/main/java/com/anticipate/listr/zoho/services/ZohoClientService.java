@@ -20,7 +20,11 @@ public class ZohoClientService
 {
     private final String chatId;
 
+    private final String channelName;
+
     private final String cliqHost;
+
+    private final String zApiKey;
 
     private final ZohoAuthService zohoAuthService;
 
@@ -29,9 +33,11 @@ public class ZohoClientService
     @Autowired
     public ZohoClientService(@Value("${zoho.cliq.chatId}") String chatId,
                              @Value("${zoho.cliq.host}") String cliqHost,
+                             @Value("${zoho.cliq.channelName}") String channelName,
+                             @Value("${zoho.cliq.zApiKey}") String zApiKey,
                              ZohoAuthService zohoAuthService)
     {
-        this(chatId, cliqHost, zohoAuthService, RestClient.builder());
+        this(chatId, cliqHost, channelName, zApiKey, zohoAuthService, RestClient.builder());
     }
 
     // allows tests to bind a mock server to the rest client
