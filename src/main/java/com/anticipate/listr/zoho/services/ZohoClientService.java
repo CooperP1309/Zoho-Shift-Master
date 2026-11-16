@@ -53,14 +53,16 @@ public class ZohoClientService
     {
         ZohoAuthEntity authEntity = zohoAuthService.getZohoAuthEntity();
 
-        String uri = cliqHost + "/api/v2/chats/" + chatId + "/message";
+        //String uri = cliqHost + "/api/v2/chats/" + chatId + "/message";
+        String uri = cliqHost + "/api/v2/channelsbyname/" + channelName + "/message?zapikey=" + zApiKey;
+
 
         log.info("Posting message to {}", uri);
 
         return restClient.post()
                 .uri(uri)
-                .header(authEntity.getAuthHeaderName(), authEntity.getAuthHeaderValue())
-                .header(authEntity.getOrgIdHeaderName(), authEntity.getOrgIdHeaderValue())
+                //.header(authEntity.getAuthHeaderName(), authEntity.getAuthHeaderValue())
+                //.header(authEntity.getOrgIdHeaderName(), authEntity.getOrgIdHeaderValue())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("text", text))
                 .retrieve()
