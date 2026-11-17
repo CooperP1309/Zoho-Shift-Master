@@ -20,8 +20,12 @@
 
 <h2>Weekly Roster</h2>
 
-<!-- Not submitted anywhere yet; each select is named slot-{DAY}-{HH:mm} for when saving is wired up -->
-<form id="roster-form">
+<p th:if="${message}" th:text="${message}" style="color: green"></p>
+<p th:if="${error}" th:text="${error}" style="color: red"></p>
+
+<!-- Each select is named slot-{DAY}-{HH:mm}; ShiftController.saveShifts parses these -->
+<form id="roster-form" method="post" th:action="@{/shift/save}">
+    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
     <table border="1">
         <thead>
             <tr>
@@ -45,6 +49,7 @@
             </tr>
         </tbody>
     </table>
+    <p><button type="submit">Save Roster</button></p>
 </form>
 
 <h2>Staff</h2>

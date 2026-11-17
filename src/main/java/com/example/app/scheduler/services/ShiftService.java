@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -22,7 +23,11 @@ public class ShiftService
     }
 
     // StaffId is null when the slot is unassigned
-    public record ShiftCell(DayOfWeek day, Integer staffId) 
+    public record ShiftCell(DayOfWeek day, Integer staffId)
+    {
+    }
+
+    public record SlotKey(DayOfWeek day, LocalTime startTime)
     {
     }
 
@@ -55,6 +60,19 @@ public class ShiftService
                 .orElseGet(() -> new ShiftSlot().setDayOfWeek(day).setStartTime(startTime));
 
         shiftSlotRepository.save(slot.setStaff(staff));
+    }
+
+    /*  Saves a whole roster submission in one transaction
+     *
+     *  Each key identifies a slot; a null value unassigns it.
+     *  If any slot is invalid (unknown slot or staff ID) the
+     *  whole save is rolled back, so the roster never ends up
+     *  half-written.
+     */
+    @Transactional
+    public void saveWeekGrid(Map<SlotKey, Integer> assignments)
+    {
+        assignments.forEach((slot, staffId) -> assignSlot(slot.day(), slot.startTime(), staffId));
     }
 
     /*  Builds the weekly roster grid
