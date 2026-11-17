@@ -53,6 +53,7 @@
             <th>ID</th>
             <th>Display Name</th>
             <th>Cliq ID</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -60,6 +61,13 @@
             <td th:text="${staff.id}"></td>
             <td th:text="${staff.displayName}"></td>
             <td th:text="${staff.cliqUserId}"></td>
+            <td>
+                <form method="post" th:action="@{/admin/delete-staff/{id}(id=${staff.id})}"
+                      onsubmit="return confirm('Delete this staff member?')" style="display:inline">
+                    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
         </tr>
     </tbody>
 </table>

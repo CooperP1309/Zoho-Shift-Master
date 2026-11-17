@@ -98,14 +98,36 @@ public class AdminController
         return "redirect:/admin/dashboard";
     }
 
-    @PostMapping("/create-staff")
-    /*  Deletes a user by ID
+    @PostMapping("/delete-staff/{staffID}")
+    /*  Deletes a staff member by ID
      *
-     *  This endpoint interafaces with the user repository
-     *  through the UserService module to delete a user by
-     *  their ID. Bound as a urlencoded form post from a
+     *  This endpoint interafaces with the staff repository
+     *  through the StaffService module to delete a staff member
+     *  by their ID. Bound as a urlencoded form post from a
      *  per-row form on the dashboard (plain HTML forms can't
      *  submit DELETE), redirecting back once done.
+     */
+    public String deleteStaff(@PathVariable Integer staffID)
+    {
+        try
+        {
+            staffService.deleteStaff(staffID);
+            log.info("Staff with ID {} deleted successfully", staffID);
+        }
+        catch (NoSuchElementException e)
+        {
+            log.warn("Attempted to delete missing staff with ID {}", staffID);
+        }
+
+        return "redirect:/admin/dashboard";
+    }
+
+    @PostMapping("/create-staff")
+    /*  Creates a staff member
+     *
+     *  Binds the dashboard's "Add a Staff Member" form to a
+     *  Staff entity and persists it through the StaffService
+     *  module, redirecting back to the dashboard once done.
      */
     public String createStaff(@ModelAttribute("newStaff") Staff staff)
     {

@@ -36,7 +36,7 @@ public class StaffService
     public void deleteStaff(Integer staffID) 
     {
         Staff staff = staffRepository.findById(staffID)
-                .orElseThrow(() -> new NoSuchElementException("No user found with ID: " + staffID));
+                .orElseThrow(() -> new NoSuchElementException("No staff found with ID: " + staffID));
         
         staffRepository.delete(staff);
     }
