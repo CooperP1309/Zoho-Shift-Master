@@ -18,6 +18,37 @@
 
 <p><a th:href="@{/shift/dashboard}">Refresh Shifts</a></p>
 
+<h2>Weekly Roster</h2>
+
+<!-- Not submitted anywhere yet; each select is named slot-{DAY}-{HH:mm} for when saving is wired up -->
+<form id="roster-form">
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th th:each="day : ${days}"
+                    th:text="${#strings.capitalize(#strings.toLowerCase(day.name()))}"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="row : ${rows}">
+                <th th:text="${row.label}"></th>
+                <td th:each="cell : ${row.cells}">
+                    <select th:name="|slot-${cell.day}-${row.startTime}|">
+                        <option value="" th:selected="${cell.staffId == null}">-- Unassigned --</option>
+                        <option th:each="member : ${staff}"
+                                th:value="${member.id}"
+                                th:text="${member.displayName}"
+                                th:selected="${member.id == cell.staffId}"></option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</form>
+
+<h2>Staff</h2>
+
 <table border="1">
     <thead>
         <tr>

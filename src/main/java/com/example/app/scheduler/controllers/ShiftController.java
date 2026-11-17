@@ -1,5 +1,7 @@
 package com.example.app.scheduler.controllers;
 
+import com.example.app.scheduler.ShiftTimes;
+import com.example.app.scheduler.services.ShiftService;
 import com.example.app.scheduler.services.StaffService;
 
 import org.springframework.stereotype.Controller;
@@ -17,10 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ShiftController 
 {
     private final StaffService staffService;
+
+    private final ShiftService shiftService;
     
-    public ShiftController(StaffService staffService)
+    public ShiftController(StaffService staffService, ShiftService shiftService)
     {
         this.staffService = staffService;
+        this.shiftService = shiftService;
     }
 
     @GetMapping("dashboard")
@@ -32,6 +37,8 @@ public class ShiftController
     public String showShiftPage(Model model) 
     {
         model.addAttribute("staff", staffService.allStaff());
+        model.addAttribute("days", ShiftTimes.DAYS);
+        model.addAttribute("rows", shiftService.getWeekGrid());
      
         return "shift-page";
     }
