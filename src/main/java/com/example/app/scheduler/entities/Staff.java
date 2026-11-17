@@ -1,4 +1,4 @@
-package com.anticipate.listr.scheduler.entities;
+package com.example.app.scheduler.entities;
 
 import jakarta.persistence.*;
 

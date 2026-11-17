@@ -49,7 +49,8 @@ if [[ $use_docker == true ]]; then
         echo "Docker daemon is running."
     else
         echo "Docker daemon is NOT running."
-        echo "(Or the install requires sudo... Or it's broken)"
+        echo "(Or the install requires sudo...)"
+        echo
         exit 1
     fi
 

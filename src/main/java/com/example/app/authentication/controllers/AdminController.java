@@ -4,6 +4,7 @@ package com.example.app.authentication.controllers;
 import com.example.app.authentication.services.UserService;
 import com.example.app.authentication.services.AuthenticationService;
 import com.example.app.authentication.dtos.SetAccountEnabledDto;
+import com.example.app.scheduler.services.StaffService;
 
 /* ===== spring libs ===== */
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,11 +36,16 @@ public class AdminController
 {
     private final UserService userService;
 
+    private final StaffService staffService;
+
     private final AuthenticationService authenticationService;
 
-    public AdminController(UserService userService, AuthenticationService authenticationService)
+    public AdminController(UserService userService,
+                            StaffService staffService, 
+                            AuthenticationService authenticationService)
     {
         this.userService = userService;
+        this.staffService = staffService;
         this.authenticationService = authenticationService;
     }
 
@@ -100,6 +106,7 @@ public class AdminController
     public String getDashboard(Model model)
     {
         model.addAttribute("users", userService.allUsers());
+        model.addAttribute("staff", staffService.allStaff());
 
         return "admin-page";
     }
