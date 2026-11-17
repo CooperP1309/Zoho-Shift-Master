@@ -139,7 +139,7 @@ public class AdminController
     public String getDashboard(Model model)
     {
         model.addAttribute("users", userService.allUsers());
-        model.addAttribute("staffList", staffService.allStaff());
+        model.addAttribute("staff", staffService.allStaff());
         model.addAttribute("newStaff", new Staff());    
         // ^ thymeleaf wants an empty object containing fields of the form
 
