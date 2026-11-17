@@ -28,6 +28,12 @@ public class StaffService
         return staff;
     }
 
+    public Staff findStaffById(Integer staffID)
+    {
+        return staffRepository.findById(staffID)
+                .orElseThrow(() -> new NoSuchElementException("No staff found with ID: " + staffID));
+    }
+
     @Transactional
     public Staff createStaff(Staff staff) 
     {

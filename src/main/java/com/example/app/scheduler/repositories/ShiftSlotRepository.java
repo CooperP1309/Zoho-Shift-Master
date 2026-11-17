@@ -14,5 +14,5 @@ import java.util.Optional;
 public interface ShiftSlotRepository extends CrudRepository<ShiftSlot, Integer>
 {
     Optional<ShiftSlot> findByDayOfWeekAndStartTime(DayOfWeek dayOfWeek, LocalTime startTime);
-    List<ShiftSlot> findAllByStationMaster(Staff staff);
+    List<ShiftSlot> findAllByStaff(Staff staff);
 }

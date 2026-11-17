@@ -8,7 +8,7 @@ import java.time.LocalTime;
 /*  One cell of the weekly roster
  *
  *  A (day, start time) pair and who is on it. A null
- *  stationMaster means the slot is unassigned.
+ *  staff means the slot is unassigned.
  */
 @Table(name = "shift_slots",
        uniqueConstraints = @UniqueConstraint(columnNames = {"day_of_week", "start_time"}))
