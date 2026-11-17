@@ -4,6 +4,8 @@ package com.example.app.authentication.controllers;
 import com.example.app.authentication.services.UserService;
 import com.example.app.authentication.services.AuthenticationService;
 import com.example.app.authentication.dtos.SetAccountEnabledDto;
+import com.example.app.scheduler.services.StaffService;
+import com.example.app.scheduler.entities.Staff;
 
 /* ===== spring libs ===== */
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,11 +37,16 @@ public class AdminController
 {
     private final UserService userService;
 
+    private final StaffService staffService;
+
     private final AuthenticationService authenticationService;
 
-    public AdminController(UserService userService, AuthenticationService authenticationService)
+    public AdminController(UserService userService,
+                            StaffService staffService, 
+                            AuthenticationService authenticationService)
     {
         this.userService = userService;
+        this.staffService = staffService;
         this.authenticationService = authenticationService;
     }
 
@@ -91,6 +98,60 @@ public class AdminController
         return "redirect:/admin/dashboard";
     }
 
+    @PostMapping("/delete-staff/{staffID}")
+    /*  Deletes a staff member by ID
+     *
+     *  This endpoint interafaces with the staff repository
+     *  through the StaffService module to delete a staff member
+     *  by their ID. Bound as a urlencoded form post from a
+     *  per-row form on the dashboard (plain HTML forms can't
+     *  submit DELETE), redirecting back once done.
+     */
+    public String deleteStaff(@PathVariable Integer staffID)
+    {
+        try
+        {
+            staffService.deleteStaff(staffID);
+            log.info("Staff with ID {} deleted successfully", staffID);
+        }
+        catch (NoSuchElementException e)
+        {
+            log.warn("Attempted to delete missing staff with ID {}", staffID);
+        }
+
+        return "redirect:/admin/dashboard";
+    }
+
+    @PostMapping("/create-staff")
+    /*  Creates a staff member
+     *
+     *  Binds the dashboard's "Add a Staff Member" form to a
+     *  Staff entity and persists it through the StaffService
+     *  module, redirecting back to the dashboard once done.
+     */
+    public String createStaff(@ModelAttribute("newStaff") Staff staff)
+    {
+        if (staff == null ||
+            staff.getDisplayName() == null || staff.getDisplayName().isBlank() ||
+            staff.getCliqUserId() == null || staff.getCliqUserId().isBlank())
+        {
+            log.warn("Failed to create staff due to missing field(s)");
+            return "redirect:/admin/dashboard";
+        }
+
+        try
+        {
+            staffService.createStaff(staff);
+            log.info("Staff created with id: {}", staff.getId());
+        }
+        catch (Exception e)
+        {
+            log.warn("Failed to create staff member {}: {}", staff.getCliqUserId(), e.getMessage());
+        }
+
+        return "redirect:/admin/dashboard";
+    }
+
     @GetMapping("/dashboard")
     /*  Returns the admin dashboard
      *
@@ -100,6 +161,9 @@ public class AdminController
     public String getDashboard(Model model)
     {
         model.addAttribute("users", userService.allUsers());
+        model.addAttribute("staff", staffService.allStaff());
+        model.addAttribute("newStaff", new Staff());    
+        // ^ thymeleaf wants an empty object containing fields of the form
 
         return "admin-page";
     }
