@@ -56,13 +56,47 @@
         </tr>
     </thead>
     <tbody>
-        <tr th:each="staff : ${staff}">
+        <tr th:each="staff : ${staffList}">
             <td th:text="${staff.id}"></td>
-            <td th:text="${user.displayName}"></td>
-            <td th:text="${user.cliqUserId}"></td>
+            <td th:text="${staff.displayName}"></td>
+            <td th:text="${staff.cliqUserId}"></td>
         </tr>
     </tbody>
 </table>
+<br><br>
+<!--STAFF CREATION FORM-->
+<div class="card-header bg-primary text-white text-center">
+    <h4>Add a Staff Member</h4>
+</div>
+<form th:action="@{/admin/create-staff}" th:object="${newStaff}" method="post">
+
+    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+
+    <!-- Global (non-field) errors -->
+    <div th:if="${#fields.hasGlobalErrors()}" class="mb-3">
+        <p th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="alert alert-danger text-center mb-0"></p>
+    </div>
+
+    <!-- Display Name Field -->
+    <div class="mb-3">
+        <label for="displayName" class="form-label">Display Name</label>
+        <input type="text" id="displayName" th:field="*{displayName}" class="form-control" placeholder="Jane Doe" required />
+    </div>
+
+    <!-- Cliq ID Field -->
+    <div class="mb-3">
+        <label for="cliqUserId" class="form-label">Cliq ID</label>
+        <input type="text" id="cliqUserId" th:field="*{cliqUserId}" class="form-control" placeholder="12345678" required />
+        <div th:if="${#fields.hasErrors('cliqUserId')}" class="text-danger small mt-1">
+            <p th:each="err : ${#fields.errors('cliqUserId')}" th:text="${err}" class="mb-0"></p>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary">Register</button>
+    </div>                 
+</form>
 
 </body>
 </html>

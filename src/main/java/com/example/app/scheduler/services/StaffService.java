@@ -28,6 +28,11 @@ public class StaffService
         return staff;
     }
 
+    public Staff createStaff(Staff staff) 
+    {
+        return staffRepository.save(staff);
+    }
+
     public void deleteStaff(Integer staffID) 
     {
         Staff staff = staffRepository.findById(staffID)

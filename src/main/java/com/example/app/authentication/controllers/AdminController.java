@@ -5,6 +5,7 @@ import com.example.app.authentication.services.UserService;
 import com.example.app.authentication.services.AuthenticationService;
 import com.example.app.authentication.dtos.SetAccountEnabledDto;
 import com.example.app.scheduler.services.StaffService;
+import com.example.app.scheduler.entities.Staff;
 
 /* ===== spring libs ===== */
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -97,6 +98,38 @@ public class AdminController
         return "redirect:/admin/dashboard";
     }
 
+    @PostMapping("/create-staff")
+    /*  Deletes a user by ID
+     *
+     *  This endpoint interafaces with the user repository
+     *  through the UserService module to delete a user by
+     *  their ID. Bound as a urlencoded form post from a
+     *  per-row form on the dashboard (plain HTML forms can't
+     *  submit DELETE), redirecting back once done.
+     */
+    public String createStaff(@ModelAttribute("newStaff") Staff staff)
+    {
+        if (staff == null ||
+            staff.getDisplayName() == null || staff.getDisplayName().isBlank() ||
+            staff.getCliqUserId() == null || staff.getCliqUserId().isBlank())
+        {
+            log.warn("Failed to create staff due to missing field(s)");
+            return "redirect:/admin/dashboard";
+        }
+
+        try
+        {
+            staffService.createStaff(staff);
+            log.info("Staff created with id: {}", staff.getId());
+        }
+        catch (Exception e)
+        {
+            log.warn("Failed to create staff member {}: {}", staff.getCliqUserId(), e.getMessage());
+        }
+
+        return "redirect:/admin/dashboard";
+    }
+
     @GetMapping("/dashboard")
     /*  Returns the admin dashboard
      *
@@ -106,7 +139,9 @@ public class AdminController
     public String getDashboard(Model model)
     {
         model.addAttribute("users", userService.allUsers());
-        model.addAttribute("staff", staffService.allStaff());
+        model.addAttribute("staffList", staffService.allStaff());
+        model.addAttribute("newStaff", new Staff());    
+        // ^ thymeleaf wants an empty object containing fields of the form
 
         return "admin-page";
     }
