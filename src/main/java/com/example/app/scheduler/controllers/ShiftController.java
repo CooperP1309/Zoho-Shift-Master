@@ -1,6 +1,6 @@
 package com.example.app.scheduler.controllers;
 
-import com.example.app.scheduler.ShiftTimes;
+import com.example.app.scheduler.configs.ShiftTimes;
 import com.example.app.scheduler.services.ShiftService;
 import com.example.app.scheduler.services.StaffService;
 

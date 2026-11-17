@@ -1,4 +1,4 @@
-package com.example.app.scheduler;
+package com.example.app.scheduler.configs;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
