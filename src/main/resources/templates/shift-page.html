@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Shift Dashboard</title>
+</head>
+<body>
+
+<div>
+    <hr>
+        <p>
+            <a th:href="@{/home-page}">Go Back</a>
+        </p>
+    <hr>
+</div>
+
+<h1>Shift Dashboard</h1>
+
+<p><a th:href="@{/shift/dashboard}">Refresh Shifts</a></p>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Display Name</th>
+            <th>Cliq ID</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="staff : ${staff}">
+            <td th:text="${staff.id}"></td>
+            <td th:text="${staff.displayName}"></td>
+            <td th:text="${staff.cliqUserId}"></td>
+        </tr>
+    </tbody>
+</table>
+</body>
+</html>
