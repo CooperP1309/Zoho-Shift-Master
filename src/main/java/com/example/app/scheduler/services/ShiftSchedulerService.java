@@ -9,7 +9,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 /* local modules */
-import com.example.app.scheduler.ShiftTimes;
+import com.example.app.scheduler.configs.ShiftTimes;
 import com.example.app.scheduler.entities.ShiftSlot;
 import com.example.app.scheduler.repositories.ShiftSlotRepository;
 //import com.example.app.zoho_client.services.ZohoClientService;
@@ -109,7 +109,7 @@ public class ShiftSchedulerService
                 throw e;
             }
 
-            zohoClientService.postMessage(message);
+            //zohoClientService.postMessage(message);
             log.info("Retry succeeded, shift announcement sent to Cliq");
         }
     }
@@ -126,7 +126,7 @@ public class ShiftSchedulerService
 
         return ShiftTimes.slotStartFor(now.toLocalTime())
                 .flatMap(startTime -> shiftSlotRepository.findByDayOfWeekAndStartTime(now.getDayOfWeek(), startTime))
-                .map(ShiftSlot::getStationMaster)
+                .map(ShiftSlot::getStaff)
                 .map(stationMaster -> "Hi {@" + stationMaster.getCliqUserId() + "}, time to start your station master shift!");
     }
 }
