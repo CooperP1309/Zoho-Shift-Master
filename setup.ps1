@@ -789,6 +789,11 @@ zoho.cliq.host=$cliq_host
 # Admin portal credentials
 admin.email=$admin_email
 admin.password=$admin_password
+
+# Shift scheduler. Fires at each shift start (7am-5pm every 2h, Mon-Fri).
+# Keep in sync with ShiftTimes.START_TIMES.
+scheduler.zone=Australia/Sydney
+scheduler.cron=0 0 7-17/2 * * MON-FRI
 "@ | Out-File -FilePath $propsFile -Encoding utf8 -NoNewline
 
 # ---- Done ----

@@ -57,17 +57,13 @@
 <table border="1">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Display Name</th>
-            <th>Cliq ID</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         <tr th:each="staff : ${staff}">
-            <td th:text="${staff.id}"></td>
             <td th:text="${staff.displayName}"></td>
-            <td th:text="${staff.cliqUserId}"></td>
         </tr>
     </tbody>
 </table>
