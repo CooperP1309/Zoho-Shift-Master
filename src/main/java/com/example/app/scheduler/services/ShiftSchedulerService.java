@@ -167,8 +167,9 @@ public class ShiftSchedulerService
                                                 "They can't be serious!",
                                                 "Grow up mate!",
                                                 "*crickets*",
-                                                "Why do I even bother!");
-                                                
+                                                "Why do I even bother!",
+                                                "How did you pass your birth certificate?!");
+
                 remark = " " + remarks.get(ThreadLocalRandom.current().nextInt(remarks.size()));
             }
 

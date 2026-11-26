@@ -16,7 +16,7 @@ public class SchedulerConfiguration
      *  so tests can pin the time with Clock.fixed(...).
      */
     @Bean
-    public Clock clock(@Value("Australia/Sydney") String zone)
+    public Clock clock(@Value("${scheduler.zone}") String zone)
     {
         return Clock.system(ZoneId.of(zone));
     }
