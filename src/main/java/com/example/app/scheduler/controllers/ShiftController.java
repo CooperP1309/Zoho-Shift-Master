@@ -1,6 +1,7 @@
 package com.example.app.scheduler.controllers;
 
 import com.example.app.scheduler.configs.ShiftTimes;
+import com.example.app.scheduler.services.ShiftCoverService;
 import com.example.app.scheduler.services.ShiftService;
 import com.example.app.scheduler.services.ShiftService.SlotKey;
 import com.example.app.scheduler.services.StaffService;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +23,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -32,11 +35,24 @@ public class ShiftController
     private final StaffService staffService;
 
     private final ShiftService shiftService;
-    
-    public ShiftController(StaffService staffService, ShiftService shiftService)
+
+    private final ShiftCoverService shiftCoverService;
+
+    // a roster start time with its display label, for the cover form's slot dropdown
+    public record SlotOption(LocalTime startTime, String label)
+    {
+    }
+
+    private static final List<SlotOption> SLOT_OPTIONS = ShiftTimes.START_TIMES.stream()
+            .map(startTime -> new SlotOption(startTime, ShiftTimes.label(startTime)))
+            .toList();
+
+    public ShiftController(StaffService staffService, ShiftService shiftService,
+                           ShiftCoverService shiftCoverService)
     {
         this.staffService = staffService;
         this.shiftService = shiftService;
+        this.shiftCoverService = shiftCoverService;
     }
 
     @GetMapping("dashboard")
@@ -50,8 +66,59 @@ public class ShiftController
         model.addAttribute("staff", staffService.allStaff());
         model.addAttribute("days", ShiftTimes.DAYS);
         model.addAttribute("rows", shiftService.getWeekGrid());
-     
+        model.addAttribute("startTimes", SLOT_OPTIONS);
+        model.addAttribute("covers", shiftCoverService.allCovers());
+
         return "shift-page";
+    }
+
+    @PostMapping("cover")
+    /*  Queues a one-off cover for a roster slot
+     *
+     *  The next time the scheduler fires for this day/slot it
+     *  notifies the covering staff instead of the rostered one.
+     */
+    public String queueCover(@RequestParam(required = false) String staffId,
+                             @RequestParam(required = false) String day,
+                             @RequestParam(required = false) String startTime,
+                             RedirectAttributes redirectAttributes)
+    {
+        try
+        {
+            if (staffId == null || staffId.isBlank() || day == null || day.isBlank()
+                    || startTime == null || startTime.isBlank())
+            {
+                throw new IllegalArgumentException("staff, day and slot are all required");
+            }
+
+            shiftCoverService.queueCover(DayOfWeek.valueOf(day), LocalTime.parse(startTime), Integer.valueOf(staffId));
+            redirectAttributes.addFlashAttribute("message", "Cover queued.");
+        }
+        catch (IllegalArgumentException | NoSuchElementException | DateTimeParseException e)
+        {
+            log.warn("Rejected cover: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Cover not queued: " + e.getMessage());
+        }
+
+        return "redirect:/shift/dashboard";
+    }
+
+    @PostMapping("cover/{id}/cancel")
+    /*  Removes a queued cover before it is used */
+    public String cancelCover(@PathVariable Integer id, RedirectAttributes redirectAttributes)
+    {
+        try
+        {
+            shiftCoverService.cancelCover(id);
+            redirectAttributes.addFlashAttribute("message", "Cover cancelled.");
+        }
+        catch (NoSuchElementException e)
+        {
+            log.warn("Rejected cover cancel: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Cover not cancelled: " + e.getMessage());
+        }
+
+        return "redirect:/shift/dashboard";
     }
 
     @PostMapping("save")
