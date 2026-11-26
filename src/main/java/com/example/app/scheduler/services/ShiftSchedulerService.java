@@ -11,14 +11,18 @@ import org.springframework.web.server.ResponseStatusException;
 /* local modules */
 import com.example.app.scheduler.configs.ShiftTimes;
 import com.example.app.scheduler.entities.ShiftSlot;
+import com.example.app.scheduler.entities.Staff;
 import com.example.app.scheduler.repositories.ShiftSlotRepository;
 //import com.example.app.zoho_client.services.ZohoClientService;
 
 /* java modules */
 import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -29,6 +33,8 @@ public class ShiftSchedulerService
 
     private final ShiftSlotRepository shiftSlotRepository;
 
+    private final ShiftCoverService shiftCoverService;
+
     //private final ZohoClientService zohoClientService;
 
     private final Clock clock;
@@ -36,17 +42,20 @@ public class ShiftSchedulerService
     private final Duration retryDelay;
 
     @Autowired
-    public ShiftSchedulerService(ShiftSlotRepository shiftSlotRepository,// ZohoClientService zohoClientService,
+    public ShiftSchedulerService(ShiftSlotRepository shiftSlotRepository, ShiftCoverService shiftCoverService,
+                                 // ZohoClientService zohoClientService,
                                  Clock clock)
     {
-        this(shiftSlotRepository, /*zohoClientService,*/ clock, DEFAULT_RETRY_DELAY);
+        this(shiftSlotRepository, shiftCoverService, /*zohoClientService,*/ clock, DEFAULT_RETRY_DELAY);
     }
 
     // allows tests to skip the retry delay
-    ShiftSchedulerService(ShiftSlotRepository shiftSlotRepository, //ZohoClientService zohoClientService,
+    ShiftSchedulerService(ShiftSlotRepository shiftSlotRepository, ShiftCoverService shiftCoverService,
+                          //ZohoClientService zohoClientService,
                           Clock clock, Duration retryDelay)
     {
         this.shiftSlotRepository = shiftSlotRepository;
+        this.shiftCoverService = shiftCoverService;
         //this.zohoClientService = zohoClientService;
         this.clock = clock;
         this.retryDelay = retryDelay;
@@ -61,7 +70,7 @@ public class ShiftSchedulerService
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void announceCurrentShift()
     {
-        Optional<String> message = buildCurrentShiftMessage();
+        Optional<String> message = resolveCurrentShiftMessage();
 
         if (message.isEmpty()) {
             log.warn("No station master assigned for the shift at {}", ZonedDateTime.now(clock));
@@ -114,19 +123,61 @@ public class ShiftSchedulerService
         }
     }
 
-    /*  Builds the message for the current shift
+    /*  Resolves the message for the current shift
      *
-     *  Looks up the roster slot containing the current time and
-     *  returns the mention message for whoever is on it. Empty if
-     *  outside rostered hours or the slot is unassigned.
+     *  Looks up the roster slot containing the current time. If a
+     *  cover is queued for that slot, the covering staff is
+     *  mentioned instead and the cover is CONSUMED (deleted), so
+     *  only call this when the announcement is actually going out.
+     *  Otherwise mentions the rostered staff. Empty if outside
+     *  rostered hours, or the slot is unassigned with no cover.
      */
-    public Optional<String> buildCurrentShiftMessage()
+    public Optional<String> resolveCurrentShiftMessage()
     {
         ZonedDateTime now = ZonedDateTime.now(clock);
+        Optional<LocalTime> slotStart = ShiftTimes.slotStartFor(now.toLocalTime());
 
-        return ShiftTimes.slotStartFor(now.toLocalTime())
-                .flatMap(startTime -> shiftSlotRepository.findByDayOfWeekAndStartTime(now.getDayOfWeek(), startTime))
-                .map(ShiftSlot::getStaff)
-                .map(stationMaster -> "Hi {@" + stationMaster.getCliqUserId() + "}, time to start your station master shift!");
+        if (slotStart.isEmpty())
+        {
+            return Optional.empty();
+        }
+
+        Optional<Staff> rostered = shiftSlotRepository
+                .findByDayOfWeekAndStartTime(now.getDayOfWeek(), slotStart.get())
+                .map(ShiftSlot::getStaff);
+
+        Optional<Staff> cover = shiftCoverService.takeCover(now.getDayOfWeek(), slotStart.get());
+
+        if (cover.isPresent())
+        {
+            String coveringFor = rostered
+                    .map(staff -> " (covering for " + staff.getDisplayName() + ")")
+                    .orElse("");
+
+            log.info("Using queued cover {} for the {} {} shift", cover.get().getDisplayName(),
+                    now.getDayOfWeek(), slotStart.get());
+
+            // someone queued a cover for themselves; call it out
+            String remark = "";
+
+            if (rostered.isPresent() && rostered.get().getId().equals(cover.get().getId()))
+            {
+                List<String> remarks = List.of("What a goose!", 
+                                                "How ridiculous!", 
+                                                "They can't be serious!",
+                                                "Grow up mate!",
+                                                "*crickets*",
+                                                "Why do I even bother!",
+                                                "How did you pass your birth certificate?!");
+
+                remark = " " + remarks.get(ThreadLocalRandom.current().nextInt(remarks.size()));
+            }
+
+            return Optional.of("Hi {@" + cover.get().getCliqUserId()
+                    + "}, time to start your station master shift" + coveringFor + "!" + remark);
+        }
+
+        return rostered.map(stationMaster ->
+                "Hi {@" + stationMaster.getCliqUserId() + "}, time to start your station master shift!");
     }
 }

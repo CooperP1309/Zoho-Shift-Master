@@ -2,6 +2,7 @@ package com.example.app.scheduler.services;
 
 import com.example.app.scheduler.entities.ShiftSlot;
 import com.example.app.scheduler.entities.Staff;
+import com.example.app.scheduler.repositories.ShiftCoverRepository;
 import com.example.app.scheduler.repositories.ShiftSlotRepository;
 import com.example.app.scheduler.repositories.StaffRepository;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,14 @@ public class StaffService
 {
     private final StaffRepository staffRepository;
     private final ShiftSlotRepository shiftSlotRepository;
+    private final ShiftCoverRepository shiftCoverRepository;
 
-    public StaffService(StaffRepository staffRepository, ShiftSlotRepository shiftSlotRepository)
+    public StaffService(StaffRepository staffRepository, ShiftSlotRepository shiftSlotRepository,
+                        ShiftCoverRepository shiftCoverRepository)
     {
         this.staffRepository = staffRepository;
         this.shiftSlotRepository = shiftSlotRepository;
+        this.shiftCoverRepository = shiftCoverRepository;
     }
 
     public List<Staff> allStaff() 
@@ -55,6 +59,9 @@ public class StaffService
         List<ShiftSlot> slots = shiftSlotRepository.findAllByStaff(staff);
         slots.forEach(slot -> slot.setStaff(null));
         shiftSlotRepository.saveAll(slots);
+
+        // Queued covers by this staff member can't be kept either
+        shiftCoverRepository.deleteAll(shiftCoverRepository.findAllByStaff(staff));
 
         staffRepository.delete(staff);
     }
