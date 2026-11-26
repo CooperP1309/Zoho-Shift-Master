@@ -20,7 +20,9 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -155,8 +157,23 @@ public class ShiftSchedulerService
             log.info("Using queued cover {} for the {} {} shift", cover.get().getDisplayName(),
                     now.getDayOfWeek(), slotStart.get());
 
+            // someone queued a cover for themselves; call it out
+            String remark = "";
+
+            if (rostered.isPresent() && rostered.get().getId().equals(cover.get().getId()))
+            {
+                List<String> remarks = List.of("What a goose!", 
+                                                "How ridiculous!", 
+                                                "They can't be serious!",
+                                                "Grow up mate!",
+                                                "*crickets*",
+                                                "Why do I even bother!");
+                                                
+                remark = " " + remarks.get(ThreadLocalRandom.current().nextInt(remarks.size()));
+            }
+
             return Optional.of("Hi {@" + cover.get().getCliqUserId()
-                    + "}, time to start your station master shift" + coveringFor + "!");
+                    + "}, time to start your station master shift" + coveringFor + "!" + remark);
         }
 
         return rostered.map(stationMaster ->

@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,6 +69,20 @@ class ShiftSchedulerServiceTest
 
         assertEquals(Optional.of("Hi {@alice-cliq}, time to start your station master shift (covering for Bob)!"), message);
         verify(shiftCoverService).takeCover(DayOfWeek.MONDAY, NINE);
+    }
+
+    @Test
+    void selfCover_addsRandomRemark()
+    {
+        rosterBob();
+        when(shiftCoverService.takeCover(DayOfWeek.MONDAY, NINE)).thenReturn(Optional.of(rostered));
+
+        String message = service.resolveCurrentShiftMessage().orElseThrow();
+
+        String prefix = "Hi {@bob-cliq}, time to start your station master shift (covering for Bob)! ";
+        assertTrue(message.startsWith(prefix), message);
+        assertTrue(List.of("What a goose!", "How ridiculous!", "They can't be serious!")
+                .contains(message.substring(prefix.length())), message);
     }
 
     @Test
