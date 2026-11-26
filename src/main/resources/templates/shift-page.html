@@ -55,39 +55,36 @@
 <h2>Cover a Shift</h2>
 
 <!-- ShiftController.queueCover; the next time this slot fires, the cover is notified instead -->
-<details>
-    <summary>Cover a shift</summary>
-    <form method="post" th:action="@{/shift/cover}">
-        <input type="hidden" name="_csrf" th:value="${csrfToken}" />
-        <p>
-            <label>Staff
-                <select name="staffId" required>
-                    <option value="">-- Select staff --</option>
-                    <option th:each="member : ${staff}"
-                            th:value="${member.id}"
-                            th:text="${member.displayName}"></option>
-                </select>
-            </label>
-            <label>Day
-                <select name="day" required>
-                    <option value="">-- Select day --</option>
-                    <option th:each="day : ${days}"
-                            th:value="${day.name()}"
-                            th:text="${#strings.capitalize(#strings.toLowerCase(day.name()))}"></option>
-                </select>
-            </label>
-            <label>Slot
-                <select name="startTime" required>
-                    <option value="">-- Select slot --</option>
-                    <option th:each="slot : ${startTimes}"
-                            th:value="${slot.startTime}"
-                            th:text="${slot.label}"></option>
-                </select>
-            </label>
-        </p>
-        <p><button type="submit">Queue Cover</button></p>
-    </form>
-</details>
+<form method="post" th:action="@{/shift/cover}">
+    <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+    <p>
+        <label>Staff
+            <select name="staffId" required>
+                <option value="">-- Select staff --</option>
+                <option th:each="member : ${staff}"
+                        th:value="${member.id}"
+                        th:text="${member.displayName}"></option>
+            </select>
+        </label>
+        <label>Day
+            <select name="day" required>
+                <option value="">-- Select day --</option>
+                <option th:each="day : ${days}"
+                        th:value="${day.name()}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(day.name()))}"></option>
+            </select>
+        </label>
+        <label>Slot
+            <select name="startTime" required>
+                <option value="">-- Select slot --</option>
+                <option th:each="slot : ${startTimes}"
+                        th:value="${slot.startTime}"
+                        th:text="${slot.label}"></option>
+            </select>
+        </label>
+    </p>
+    <p><button type="submit">Queue Cover</button></p>
+</form>
 
 <h3>Queued Covers</h3>
 
