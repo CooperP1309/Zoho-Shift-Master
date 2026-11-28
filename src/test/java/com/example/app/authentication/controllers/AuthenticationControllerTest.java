@@ -94,7 +94,7 @@ class AuthenticationControllerTest
 
         String view = authenticationController.forgotPassword(input, bindingResult, "test");
 
-        assertEquals("forgot-password-page", view);
+        assertEquals("login-page", view);
         assertEquals("Password Reset link sent.", bindingResult.getGlobalError().getDefaultMessage());
         verify(authenticationService, never()).setNewEmailSecret(any());
     }
@@ -115,7 +115,7 @@ class AuthenticationControllerTest
 
         String view = authenticationController.forgotPassword(input, bindingResult, "test");
 
-        assertEquals("forgot-password-page", view);
+        assertEquals("login-page", view);
         assertEquals("Password Reset link sent.", bindingResult.getGlobalError().getDefaultMessage());
         verify(authenticationService, never()).setNewEmailSecret(any());
     }
