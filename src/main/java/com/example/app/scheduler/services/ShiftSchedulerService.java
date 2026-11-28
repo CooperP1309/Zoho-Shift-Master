@@ -13,7 +13,7 @@ import com.example.app.scheduler.configs.ShiftTimes;
 import com.example.app.scheduler.entities.ShiftSlot;
 import com.example.app.scheduler.entities.Staff;
 import com.example.app.scheduler.repositories.ShiftSlotRepository;
-//import com.example.app.zoho_client.services.ZohoClientService;
+import com.example.app.scheduler.services.ZohoCliqService;
 
 /* java modules */
 import java.time.Clock;
@@ -35,7 +35,7 @@ public class ShiftSchedulerService
 
     private final ShiftCoverService shiftCoverService;
 
-    //private final ZohoClientService zohoClientService;
+    private final ZohoCliqService zohoCliqService;
 
     private final Clock clock;
 
@@ -43,20 +43,18 @@ public class ShiftSchedulerService
 
     @Autowired
     public ShiftSchedulerService(ShiftSlotRepository shiftSlotRepository, ShiftCoverService shiftCoverService,
-                                 // ZohoClientService zohoClientService,
-                                 Clock clock)
+                                 ZohoCliqService zohoCliqService, Clock clock)
     {
-        this(shiftSlotRepository, shiftCoverService, /*zohoClientService,*/ clock, DEFAULT_RETRY_DELAY);
+        this(shiftSlotRepository, shiftCoverService, zohoCliqService, clock, DEFAULT_RETRY_DELAY);
     }
 
     // allows tests to skip the retry delay
     ShiftSchedulerService(ShiftSlotRepository shiftSlotRepository, ShiftCoverService shiftCoverService,
-                          //ZohoClientService zohoClientService,
-                          Clock clock, Duration retryDelay)
+                          ZohoCliqService zohoCliqService, Clock clock, Duration retryDelay)
     {
         this.shiftSlotRepository = shiftSlotRepository;
         this.shiftCoverService = shiftCoverService;
-        //this.zohoClientService = zohoClientService;
+        this.zohoCliqService = zohoCliqService;
         this.clock = clock;
         this.retryDelay = retryDelay;
     }
@@ -100,7 +98,7 @@ public class ShiftSchedulerService
     {
         try
         {
-            zohoClientService.postMessage(message);
+            zohoCliqService.postMessage(message);
         }
         catch (ResourceAccessException e)
         {
@@ -117,7 +115,7 @@ public class ShiftSchedulerService
                 throw e;
             }
 
-            zohoClientService.postMessage(message);
+            zohoCliqService.postMessage(message);
             log.info("Retry succeeded, shift announcement sent to Cliq");
         }
     }

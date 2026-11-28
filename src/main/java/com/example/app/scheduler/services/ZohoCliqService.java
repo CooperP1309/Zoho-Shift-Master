@@ -1,4 +1,4 @@
-package com.anticipate.listr.zoho_client.services;
+package com.example.app.scheduler.services;
 
 /* spring specific modules */
 import org.springframework.http.MediaType;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class ZohoClientService
+public class ZohoCliqService
 {
     private final String chatId;
 
@@ -26,7 +26,7 @@ public class ZohoClientService
     private final RestClient restClient;
 
     @Autowired
-    public ZohoClientService(@Value("${zoho.cliq.chatId}") String chatId,
+    public ZohoCliqService(@Value("${zoho.cliq.chatId}") String chatId,
                              @Value("${zoho.cliq.host}") String cliqHost,
                              @Value("${zoho.cliq.channelName}") String channelName,
                              @Value("${zoho.cliq.zApiKey}") String zApiKey)
@@ -35,7 +35,7 @@ public class ZohoClientService
     }
 
     // allows tests to bind a mock server to the rest client
-    ZohoClientService(String chatId, String cliqHost, String channelName, 
+    ZohoCliqService(String chatId, String cliqHost, String channelName, 
                         String zApiKey, RestClient.Builder restClientBuilder)
     {
         this.chatId = chatId;
