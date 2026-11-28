@@ -85,12 +85,12 @@ class ShiftSchedulerServiceTest
         String prefix = "Hi {@bob-cliq}, time to start your station master shift (covering for Bob)! ";
         assertTrue(message.startsWith(prefix), message);
         assertTrue(List.of("What a goose!", 
-                                                "How ridiculous!", 
-                                                "They can't be serious!",
-                                                "Grow up mate!",
-                                                "*crickets*",
-                                                "Why do I even bother!",
-                                                "How did you pass your birth certificate?!")
+                            "How ridiculous!", 
+                            "They can't be serious!",
+                            "Grow up mate!",
+                            "*crickets*",
+                            "Why do I even bother!",
+                            "How did you pass your birth certificate?!")
                 .contains(message.substring(prefix.length())), message);
     }
 
