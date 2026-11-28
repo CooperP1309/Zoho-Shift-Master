@@ -201,6 +201,13 @@ public class AuthenticationController
 
         if (existingUser.isEmpty())
         {
+            if (!this.emailValidator.isValid(forgotPasswordDto.getEmail()))
+            {
+                log.info("Password reset requested with invalid email format: {}", forgotPasswordDto.getEmail());
+                bindingResult.reject("email.invalid", "Please provide a valid email address");
+                return "forgot-password-page";
+            }
+
             log.info("Password reset requested for unregistered email: {}", forgotPasswordDto.getEmail());   
             bindingResult.reject("password.reset.sent", "Password Reset link sent.");
             return "login-page";

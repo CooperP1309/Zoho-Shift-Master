@@ -42,6 +42,9 @@ class ShiftSchedulerServiceTest
     @Mock
     private ShiftCoverService shiftCoverService;
 
+    @Mock
+    private ZohoCliqService zohoCliqService;
+
     private ShiftSchedulerService service;
 
     private final Staff rostered = new Staff().setId(1).setDisplayName("Bob").setCliqUserId("bob-cliq");
@@ -50,7 +53,7 @@ class ShiftSchedulerServiceTest
     @BeforeEach
     void setUp()
     {
-        service = new ShiftSchedulerService(shiftSlotRepository, shiftCoverService, MONDAY_9AM, Duration.ZERO);
+        service = new ShiftSchedulerService(shiftSlotRepository, shiftCoverService, zohoCliqService, MONDAY_9AM, Duration.ZERO);
     }
 
     private void rosterBob()
@@ -81,7 +84,13 @@ class ShiftSchedulerServiceTest
 
         String prefix = "Hi {@bob-cliq}, time to start your station master shift (covering for Bob)! ";
         assertTrue(message.startsWith(prefix), message);
-        assertTrue(List.of("What a goose!", "How ridiculous!", "They can't be serious!")
+        assertTrue(List.of("What a goose!", 
+                            "How ridiculous!", 
+                            "They can't be serious!",
+                            "Grow up mate!",
+                            "*crickets*",
+                            "Why do I even bother!",
+                            "How did you pass your birth certificate?!")
                 .contains(message.substring(prefix.length())), message);
     }
 
@@ -111,7 +120,7 @@ class ShiftSchedulerServiceTest
     void outsideRosteredHours_returnsEmpty_andDoesNotTouchCovers()
     {
         Clock evening = Clock.fixed(ZonedDateTime.of(2026, 11, 30, 20, 0, 0, 0, ZONE).toInstant(), ZONE);
-        service = new ShiftSchedulerService(shiftSlotRepository, shiftCoverService, evening, Duration.ZERO);
+        service = new ShiftSchedulerService(shiftSlotRepository, shiftCoverService, zohoCliqService, evening, Duration.ZERO);
 
         assertTrue(service.resolveCurrentShiftMessage().isEmpty());
         verifyNoInteractions(shiftCoverService);
