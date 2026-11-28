@@ -15,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ZohoCliqService
 {
-    private final String chatId;
-
     private final String channelName;
 
     private final String cliqHost;
@@ -26,19 +24,17 @@ public class ZohoCliqService
     private final RestClient restClient;
 
     @Autowired
-    public ZohoCliqService(@Value("${zoho.cliq.chatId}") String chatId,
-                             @Value("${zoho.cliq.host}") String cliqHost,
-                             @Value("${zoho.cliq.channelName}") String channelName,
-                             @Value("${zoho.cliq.zApiKey}") String zApiKey)
+    public ZohoCliqService(@Value("${zoho.cliq.host}") String cliqHost,
+                            @Value("${zoho.cliq.channelName}") String channelName,
+                            @Value("${zoho.cliq.zApiKey}") String zApiKey)
     {
-        this(chatId, cliqHost, channelName, zApiKey, RestClient.builder());
+        this(cliqHost, channelName, zApiKey, RestClient.builder());
     }
 
     // allows tests to bind a mock server to the rest client
-    ZohoCliqService(String chatId, String cliqHost, String channelName, 
+    ZohoCliqService(String cliqHost, String channelName, 
                         String zApiKey, RestClient.Builder restClientBuilder)
     {
-        this.chatId = chatId;
         this.cliqHost = cliqHost;
         this.channelName = channelName;
         this.zApiKey = zApiKey;
@@ -47,8 +43,7 @@ public class ZohoCliqService
 
     /*  Posts a message
      *
-     *  Posts the given text to the configured Cliq chat
-     *  via POST /api/v2/chats/{chatId}/message.
+     *  Posts the given text to the configured Cliq chat.
      */
     public String postMessage(String text)
     {
