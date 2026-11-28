@@ -100,8 +100,7 @@ public class ShiftSchedulerService
     {
         try
         {
-            //zohoClientService.postMessage(message);
-            log.info("TEST POSTING OF MESSAGE");
+            zohoClientService.postMessage(message);
         }
         catch (ResourceAccessException e)
         {
@@ -118,7 +117,7 @@ public class ShiftSchedulerService
                 throw e;
             }
 
-            //zohoClientService.postMessage(message);
+            zohoClientService.postMessage(message);
             log.info("Retry succeeded, shift announcement sent to Cliq");
         }
     }
